@@ -9,14 +9,17 @@ exports.getRegisterPage = (req, res) => {
     res.render('register', {
         error: null,
         domain: domain || '',
-        plan: plan || ''
+        plan: plan || '',
+        user: null 
     });
 };
 
 exports.getLoginPage = (req, res) => {
-    res.render('login', { error: null });
+    res.render('login', { 
+        error: null,
+        user: null 
+    });
 };
-
 exports.handleRegister = async (req, res) => {
     logger.info('CONTROLLER: Proses registrasi dimulai.');
     const { name, email, password, password_confirmation, organization, street_1, city, state, country_code, postal_code, voice, plan } = req.body;
