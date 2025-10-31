@@ -1,0 +1,31 @@
+</main>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebarClose = document.getElementById('sidebar-close');
+            const notificationBell = document.getElementById('notification-bell');
+            const notificationDropdown = document.getElementById('notification-dropdown');
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', () => sidebar.classList.add('open'));
+            }
+            if (sidebarClose) {
+                sidebarClose.addEventListener('click', () => sidebar.classList.remove('open'));
+            }
+            if (notificationBell) {
+                notificationBell.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    notificationDropdown.classList.toggle('show');
+                });
+            }
+            document.addEventListener('click', (event) => {
+                if (notificationDropdown && !notificationDropdown.contains(event.target) && !notificationBell.contains(event.target)) {
+                    notificationDropdown.classList.remove('show');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

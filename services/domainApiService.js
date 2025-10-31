@@ -1,0 +1,160 @@
+// services/domainApiService.js
+const axios = require('axios');
+const logger = require('../utils/logger');
+
+const apiClient = axios.create({
+    baseURL: process.env.RDASH_API_URL,
+    timeout: 15000,
+    auth: {
+        username: process.env.RDASH_API_USERNAME,
+        password: process.env.RDASH_API_PASSWORD
+    }
+});
+
+const handleApiError = (error, functionName) => {
+    const errorData = {
+        message: error.message,
+        responseData: error.response ? error.response.data : 'No response data',
+        status: error.response ? error.response.status : 'No response status'
+    };
+    logger.error(`KESALAHAN API di ${functionName}`, errorData);
+    if (error.code === 'ECONNABORTED') {
+        throw new Error('API tidak merespons (timeout). Coba lagi nanti.');
+    }
+    throw new Error(error.response?.data?.message || 'Terjadi kesalahan pada server API.');
+};
+
+// --- FUNGSI CUSTOMER ---
+const createCustomer = async (customerData) => {
+    try {
+        const response = await apiClient.post('/customers', customerData);
+        return response.data;
+    } catch (error) { handleApiError(error, 'createCustomer'); }
+};
+
+const showCustomer = async (customerId) => {
+    try {
+        const response = await apiClient.get(`/customers/${customerId}`);
+        return response.data;
+    } catch (error) { handleApiError(error, 'showCustomer'); }
+};
+
+const updateCustomer = async (customerId, customerData) => {
+    try {
+        const response = await apiClient.put(`/customers/${customerId}`, customerData);
+        return response.data;
+    } catch (error) { handleApiError(error, 'updateCustomer'); }
+};
+
+
+// --- FUNGSI DOMAIN ---
+const listDomains = async (params = {}) => {
+    try {
+        const response = await apiClient.get('/domains', { params });
+        return response.data;
+    } catch (error) { handleApiError(error, 'listDomains'); }
+};
+
+const registerDomain = async (domainData) => {
+    try {
+        const response = await apiClient.post('/domains', domainData);
+        return response.data;
+    } catch (error) { handleApiError(error, 'registerDomain'); }
+};
+
+const checkDomainAvailability = async (domain) => {
+    try {
+        const response = await apiClient.get('/domains/availability', { params: { domain } });
+        return response.data;
+    } catch (error) { handleApiError(error, 'checkDomainAvailability'); }
+};
+
+const transferDomain = async (transferData) => {
+    try {
+        const response = await apiClient.post('/domains/transfer', transferData);
+        return response.data;
+    } catch (error) { handleApiError(error, 'transferDomain'); }
+};
+
+const showDomainById = async (domainId) => {
+    try {
+        const response = await apiClient.get(`/domains/${domainId}`);
+        return response.data;
+    } catch (error) { handleApiError(error, 'showDomainById'); }
+};
+
+const resendVerificationEmail = async (domainId) => {
+    try {
+        const response = await apiClient.post(`/domains/${domainId}/verification/resend`);
+        return response.data;
+    } catch (error) { handleApiError(error, 'resendVerificationEmail'); }
+};
+
+const lockDomain = async (domainId, reason = '') => {
+    try {
+        const response = await apiClient.put(`/domains/${domainId}/locked`, { reason });
+        return response.data;
+    } catch (error) { handleApiError(error, 'lockDomain'); }
+};
+
+const unlockDomain = async (domainId) => {
+    try {
+        const response = await apiClient.delete(`/domains/${domainId}/locked`);
+        return response.data;
+    } catch (error) { handleApiError(error, 'unlockDomain'); }
+};
+
+const suspendDomain = async (domainId, reason, type = 2) => {
+    try {
+        const response = await apiClient.put(`/domains/${domainId}/suspended`, { type, reason });
+        return response.data;
+    } catch (error) { handleApiError(error, 'suspendDomain'); }
+};
+
+const unsuspendDomain = async (domainId) => {
+    try {
+        const response = await apiClient.delete(`/domains/${domainId}/suspended`);
+        return response.data;
+    } catch (error) { handleApiError(error, 'unsuspendDomain'); }
+};
+
+// --- FUNGSI DNS ---
+const getDnsRecords = async (domainId) => {
+    try {
+        const response = await apiClient.get(`/domains/${domainId}/dns`);
+        return response.data;
+    } catch (error) { handleApiError(error, 'getDnsRecords'); }
+};
+
+const createDnsRecord = async (domainId, recordData) => {
+    try {
+        const response = await apiClient.put(`/domains/${domainId}/dns`, recordData);
+        return response.data;
+    } catch (error) { handleApiError(error, 'createDnsRecord'); }
+};
+
+const deleteDnsRecord = async (domainId, recordData) => {
+    try {
+        const response = await apiClient.delete(`/domains/${domainId}/dns/record`, { data: recordData });
+        return response.data;
+    } catch (error) { handleApiError(error, 'deleteDnsRecord'); }
+};
+
+module.exports = {
+    createCustomer,
+    showCustomer,
+    updateCustomer,
+    listDomains,
+    registerDomain,
+    checkDomainAvailability,
+    transferDomain,
+    showDomainById,
+    resendVerificationEmail,
+    lockDomain,
+    unlockDomain,
+    suspendDomain,
+    unsuspendDomain,
+    getDnsRecords,
+    createDnsRecord,
+    deleteDnsRecord
+};

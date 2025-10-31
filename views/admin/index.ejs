@@ -1,0 +1,63 @@
+<%- include('../partials/header', { title: title || 'Admin Dashboard' }) %>
+
+<style>
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    .stat-card {
+        background-color: #fff;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+    }
+    .stat-card .icon {
+        font-size: 2.5rem;
+        margin-right: 1rem;
+        color: var(--primary-accent);
+    }
+    .stat-card .info h3 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 700;
+    }
+    .stat-card .info p {
+        margin: 0;
+        color: #6b7280;
+    }
+</style>
+
+<h1>Admin Dashboard</h1>
+<p>Selamat datang, <%= user.name %>. Di sini Anda dapat mengelola aspek penting dari situs Anda.</p>
+
+<div class="stat-grid" style="margin-top: 2rem;">
+    <div class="stat-card">
+        <div class="icon"><i class="fas fa-users"></i></div>
+        <div class="info">
+            <h3><%= typeof userCount !== 'undefined' ? userCount : '0' %></h3>
+            <p>Total Pengguna</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="icon"><i class="fas fa-globe"></i></div>
+        <div class="info">
+            <h3><%= typeof domainCount !== 'undefined' ? domainCount : '0' %></h3>
+            <p>Total Domain</p>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 2rem;">
+    <h2>Tindakan Cepat</h2>
+    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+        <a href="/admin/domains" class="btn btn-primary">Kelola Domain</a>
+        <a href="/admin/vouchers" class="btn btn-primary">Kelola Voucher</a>
+        <a href="/admin/promos" class="btn btn-primary">Kelola Promo</a>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

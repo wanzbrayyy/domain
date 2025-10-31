@@ -1,0 +1,80 @@
+<%- include('partials/header', { title: title }) %>
+
+<!-- PASTIKAN URL INI BENAR UNTUK MODE LIVE -->
+<script type="text/javascript"
+    src="https://app.midtrans.com/snap/snap.js"
+    data-client-key="<%= clientKey %>"></script>
+
+<style>
+    .checkout-container { max-width: 600px; margin: 2rem auto; }
+    .detail-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+    .detail-item span:first-child { color: #555; }
+    .voucher-form { display: flex; gap: 10px; margin-top: 1rem; }
+    .voucher-form input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+</style>
+
+<div class="card checkout-container">
+    <h2><i class="fas fa-shopping-cart"></i> Ringkasan Pesanan</h2>
+    
+    <div style="margin-top: 1.5rem;">
+        <div class="detail-item">
+            <span>Paket</span>
+            <span style="text-transform: capitalize; font-weight: 500;"><%= order.plan %></span>
+        </div>
+        <div class="detail-item">
+            <span>Harga Awal</span>
+            <span>Rp <%= order.base_price.toLocaleString('id-ID') %></span>
+        </div>
+        <% if(order.voucher_code) { %>
+            <div class="detail-item">
+                <span>Voucher (<%= order.voucher_code %>)</span>
+                <span style="color: green;">- Rp <%= (order.base_price - order.final_price).toLocaleString('id-ID') %></span>
+            </div>
+        <% } %>
+        <hr style="border: none; border-top: 1px dashed #ccc; margin: 1rem 0;">
+        <div class="detail-item" style="font-size: 1.2rem;">
+            <strong>Total Bayar</strong>
+            <strong>Rp <%= order.final_price.toLocaleString('id-ID') %></strong>
+        </div>
+    </div>
+
+    <hr>
+
+    <h3>Punya Kode Voucher?</h3>
+    <form action="/apply-voucher" method="POST" class="voucher-form">
+        <input type="text" name="voucher_code" placeholder="Masukkan kode voucher">
+        <button type="submit" class="btn btn-secondary">Terapkan</button>
+    </form>
+    
+    <button id="pay-button" class="btn btn-primary" style="width: 100%; margin-top: 2rem; padding: 15px; font-size: 1.1rem;">
+        <i class="fas fa-shield-alt"></i> Bayar Sekarang
+    </button>
+</div>
+
+<script type="text/javascript">
+    document.getElementById('pay-button').onclick = async function(){
+        try {
+            const response = await fetch('/process-payment', { method: 'POST' });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Gagal memulai pembayaran.');
+            }
+            const data = await response.json();
+            if(data.token) {
+                snap.pay(data.token, {
+                    onSuccess: function(result){ alert("Pembayaran berhasil!"); console.log(result); window.location.href = '/dashboard'; },
+                    onPending: function(result){ alert("Menunggu pembayaran Anda."); console.log(result); window.location.href = '/dashboard'; },
+                    onError: function(result){ alert("Pembayaran gagal!"); console.log(result); },
+                    onClose: function(){ /* Tidak melakukan apa-apa saat popup ditutup */ }
+                });
+            } else {
+                alert('Gagal mendapatkan token pembayaran.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Terjadi kesalahan: ' + error.message);
+        }
+    };
+</script>
+
+<%- include('partials/footer') %>

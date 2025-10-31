@@ -1,0 +1,43 @@
+<%- include('../partials/header', { title: 'Konfirmasi Pesanan Domain' }) %>
+
+<!-- Script Midtrans Snap -->
+<script type="text/javascript" src="https://app.midtrans.com/snap/snap.js" data-client-key="<%= clientKey %>"></script>
+
+<div class="card" style="max-width: 600px; margin: 2rem auto;">
+    <h2><i class="fas fa-check-circle"></i> Konfirmasi Pesanan</h2>
+    <p>Satu langkah lagi untuk memiliki domain impian Anda.</p>
+    
+    <div style="margin-top: 1.5rem;">
+        <div class="detail-item"><span>Domain</span><strong style="font-size: 1.2rem;"><%= order.domain %></strong></div>
+        <div class="detail-item"><span>Periode Registrasi</span><span>1 Tahun</span></div>
+        <hr>
+        <div class="detail-item" style="font-size: 1.2rem;"><strong>Total Bayar</strong><strong>Rp <%= order.price.toLocaleString('id-ID') %></strong></div>
+    </div>
+    
+    <button id="pay-button" class="btn btn-primary" style="width: 100%; margin-top: 2rem; padding: 15px; font-size: 1.1rem;">
+        <i class="fas fa-shield-alt"></i> Lanjutkan ke Pembayaran
+    </button>
+</div>
+
+<script type="text/javascript">
+    document.getElementById('pay-button').onclick = async function(){
+        try {
+            const response = await fetch('/dashboard/process-domain-payment', { method: 'POST' });
+            const data = await response.json();
+            if (data.token) {
+                snap.pay(data.token, {
+                    onSuccess: function(result){
+                        alert("Pembayaran berhasil! Mendaftarkan domain Anda...");
+                        // Kirim konfirmasi ke server untuk finalisasi registrasi
+                        fetch('/dashboard/finalize-registration', { method: 'POST' })
+                            .then(() => window.location.href = '/dashboard');
+                    },
+                    onPending: function(result){ alert("Menunggu pembayaran Anda."); window.location.href = '/dashboard'; },
+                    onError: function(result){ alert("Pembayaran gagal!"); },
+                });
+            } else { throw new Error(data.error || 'Gagal mendapatkan token.'); }
+        } catch (error) { alert('Terjadi kesalahan: ' + error.message); }
+    };
+</script>
+
+<%- include('../partials/footer') %>
