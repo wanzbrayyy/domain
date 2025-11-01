@@ -1,97 +1,52 @@
 </main>
-    </div>
-
-<% if (user) { %>
+    <% if (user) { %>
     <nav class="bottom-nav">
-        <a href="/dashboard" class="bottom-nav-item <%= (typeof title !== 'undefined' && title.includes('Dashboard')) ? 'active' : '' %>">
-            <i class="fas fa-tachometer-alt"></i>
-            <span>Dashboard</span>
-        </a>
-        <a href="/dashboard/buy-domain" class="bottom-nav-item <%= (typeof title !== 'undefined' && title.includes('Beli Domain')) ? 'active' : '' %>">
-            <i class="fas fa-plus-circle"></i>
-            <span>Beli Domain</span>
-        </a>
-        <a href="/dashboard/transfer-domain" class="bottom-nav-item <%= (typeof title !== 'undefined' && title.includes('Transfer')) ? 'active' : '' %>">
-            <i class="fas fa-exchange-alt"></i>
-            <span>Transfer</span>
-        </a>
-        <a href="/dashboard/settings" class="bottom-nav-item <%= (typeof title !== 'undefined' && title.includes('Pengaturan')) ? 'active' : '' %>">
-            <i class="fas fa-user-cog"></i>
-            <span>Pengaturan</span>
-        </a>
-         <% if (user.role === 'admin') { %>
-            <a href="/admin" class="bottom-nav-item <%= (typeof title !== 'undefined' && title.includes('Admin')) ? 'active' : '' %>">
-                <i class="fas fa-shield-alt"></i>
-                <span>Admin</span>
-            </a>
-        <% } %>
-        <a href="/logout" class="bottom-nav-item">
-            <i class="fas fa-sign-out-alt"></i>
-            <span>Logout</span>
-        </a>
+        <a href="/dashboard" class="bottom-nav-item"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+        <a href="/dashboard/buy-domain" class="bottom-nav-item"><i class="fas fa-plus-circle"></i><span>Beli Domain</span></a>
+        <a href="/dashboard/transfer-domain" class="bottom-nav-item"><i class="fas fa-exchange-alt"></i><span>Transfer</span></a>
+        <a href="/dashboard/settings" class="bottom-nav-item"><i class="fas fa-user-cog"></i><span>Pengaturan</span></a>
+        <% if (user.role === 'admin') { %><a href="/admin" class="bottom-nav-item"><i class="fas fa-shield-alt"></i><span>Admin</span></a><% } %>
     </nav>
-<% } %>
-
-<script>
+    <% } %>
+    <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebar-toggle');
-        const sidebarClose = document.getElementById('sidebar-close');
-        const notificationBell = document.getElementById('notification-bell');
-        const notificationDropdown = document.getElementById('notification-dropdown');
-
-        if (sidebarToggle) { sidebarToggle.addEventListener('click', () => sidebar.classList.add('open')); }
-        if (sidebarClose) { sidebarClose.addEventListener('click', () => sidebar.classList.remove('open')); }
-        if (notificationBell) {
-            notificationBell.addEventListener('click', (event) => {
+        const profileAvatar = document.getElementById('profile-avatar-container');
+        const profileDropdown = document.getElementById('profile-dropdown');
+        if (profileAvatar) {
+            profileAvatar.addEventListener('click', (event) => {
                 event.stopPropagation();
-                notificationDropdown.classList.toggle('show');
+                profileDropdown.classList.toggle('show');
             });
         }
         document.addEventListener('click', (event) => {
-            if (notificationDropdown && !notificationDropdown.contains(event.target) && !notificationBell.contains(event.target)) {
-                notificationDropdown.classList.remove('show');
+            if (profileDropdown && !profileDropdown.contains(event.target) && !profileAvatar.contains(event.target)) {
+                profileDropdown.classList.remove('show');
             }
         });
-
         function generateAvatar(name) {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             const size = 64;
-            canvas.width = size;
-            canvas.height = size;
-
+            canvas.width = size; canvas.height = size;
             const nameParts = name.split(' ');
-            const initials = nameParts.length > 1 
-                ? `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`
-                : nameParts[0][0];
-
+            const initials = nameParts.length > 1 ? `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}` : nameParts[0][0];
             let hash = 0;
-            for (let i = 0; i < name.length; i++) {
-                hash = name.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            const h = hash % 360;
-            context.fillStyle = `hsl(${h}, 50%, 50%)`;
+            for (let i = 0; i < name.length; i++) { hash = name.charCodeAt(i) + ((hash << 5) - hash); }
+            context.fillStyle = `hsl(${hash % 360}, 50%, 50%)`;
             context.fillRect(0, 0, size, size);
-
             context.fillStyle = '#ffffff';
             context.font = `${size / 2.5}px Poppins`;
-            context.textAlign = 'center';
-            context.textBaseline = 'middle';
+            context.textAlign = 'center'; context.textBaseline = 'middle';
             context.fillText(initials.toUpperCase(), size / 2, size / 2);
-            
             return canvas.toDataURL();
         }
-
         document.querySelectorAll('.default-avatar-img').forEach(img => {
             if (!img.getAttribute('src')) {
                 const name = img.getAttribute('data-name');
-                if (name) {
-                    img.src = generateAvatar(name);
-                }
+                if (name) img.src = generateAvatar(name);
             }
         });
     });
-</script>
+    </script>
 </body>
 </html>
