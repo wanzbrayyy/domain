@@ -1,26 +1,27 @@
-// routes/dashboard.js
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/authMiddleware');
+const { isAuthenticated } = require('../middleware/auth');
+const upload = require('../config/cloudinary');
 const dashboardController = require('../controllers/dashboardController');
 
-router.use(protect);
+router.get('/', isAuthenticated, dashboardController.getDashboard);
+router.get('/buy-domain', isAuthenticated, dashboardController.getBuyDomainPage);
+router.get('/transfer-domain', isAuthenticated, dashboardController.getTransferDomainPage);
+router.post('/transfer-domain', isAuthenticated, dashboardController.handleTransferDomain);
 
-router.get('/', dashboardController.getDashboard);
-router.get('/buy-domain', dashboardController.getBuyDomainPage);
-router.get('/transfer-domain', dashboardController.getTransferDomainPage);
-router.get('/settings', dashboardController.getSettingsPage);
-router.post('/settings', dashboardController.updateUserSettings);
-router.get('/confirm-registration', dashboardController.getConfirmRegistrationPage);
-router.get('/domain/:domainId/manage', dashboardController.getDomainManagementPage);
-router.get('/domain/:domainId/dns', dashboardController.getDnsManagerPage);
+router.get('/settings', isAuthenticated, dashboardController.getSettingsPage);
+router.post('/settings', isAuthenticated, upload.single('profilePicture'), dashboardController.updateUserSettings);
 
-router.post('/transfer-domain', dashboardController.handleTransferDomain);
-router.post('/domain/:domainId/resend-verification', dashboardController.resendVerification);
-router.post('/domain/:domainId/toggle-lock', dashboardController.toggleLockStatus);
-router.post('/domain/:domainId/dns/create', dashboardController.createDnsRecord);
-router.post('/domain/:domainId/dns/delete', dashboardController.deleteDnsRecord);
-router.post('/process-domain-payment', dashboardController.processDomainPayment);
-router.post('/finalize-registration', dashboardController.handleSuccessfulDomainRegistration);
+router.get('/confirm-registration', isAuthenticated, dashboardController.getConfirmRegistrationPage);
+router.post('/process-domain-payment', isAuthenticated, dashboardController.processDomainPayment);
+router.post('/finalize-registration', isAuthenticated, dashboardController.handleSuccessfulDomainRegistration);
+
+router.get('/domain/:domainId/manage', isAuthenticated, dashboardController.getDomainManagementPage);
+router.post('/domain/:domainId/toggle-lock', isAuthenticated, dashboardController.toggleLockStatus);
+router.post('/domain/:domainId/resend-verification', isAuthenticated, dashboardController.resendVerification);
+
+router.get('/domain/:domainId/dns', isAuthenticated, dashboardController.getDnsManagerPage);
+router.post('/domain/:domainId/dns/create', isAuthenticated, dashboardController.createDnsRecord);
+router.post('/domain/:domainId/dns/delete', isAuthenticated, dashboardController.deleteDnsRecord);
 
 module.exports = router;
