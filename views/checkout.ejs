@@ -56,7 +56,7 @@
                     onSuccess: function(result){ alert("Pembayaran berhasil!"); console.log(result); window.location.href = '/dashboard'; },
                     onPending: function(result){ alert("Menunggu pembayaran Anda."); console.log(result); window.location.href = '/dashboard'; },
                     onError: function(result){ alert("Pembayaran gagal!"); console.log(result); },
-                    onClose: function(){ /* Tidak melakukan apa-apa saat popup ditutup */ }
+                    onClose: function(){}
                 });
             } else {
                 alert('Gagal mendapatkan token pembayaran.');
