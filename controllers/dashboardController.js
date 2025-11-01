@@ -8,7 +8,7 @@ const domainPrices = {
     'org': 165000, 'xyz': 30000, 'default': 175000
 };
 
-const snap = new midtransClient.Snap({
+const snap = new midtrans-client.Snap({
     isProduction: true,
     serverKey: process.env.MIDTRANS_SERVER_KEY,
     clientKey: process.env.MIDTRANS_CLIENT_KEY
