@@ -42,8 +42,6 @@
                                 </form>
                             </div>
                         <% }) %>
-                    <% } else { %>
-                        <p style="text-align: center; width: 100%;">Produk unggulan tidak tersedia saat ini.</p>
                     <% } %>
                 </div>
             </div>
@@ -59,7 +57,7 @@
         domainForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const keyword = domainInput.value.trim();
-            if (!keyword) { domainResults.innerHTML = `<div style="text-align: center; color: #ef4444;">Harap masukkan nama domain.</div>`; return; }
+            if (!keyword) return;
             domainResults.innerHTML = '<div class="spinner"></div>';
             try {
                 const response = await fetch('/check-domain', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keyword }) });
@@ -68,6 +66,7 @@
                 results.forEach(result => {
                     let statusHTML = '';
                     if (result.status === 'available') {
+                        // THIS IS THE FIX
                         statusHTML = `<div><span class="status-available">TERSEDIA</span> <a href="/order-domain?domain=${result.name}" class="btn btn-secondary btn-sm">Daftar</a></div>`;
                     } else if (result.status === 'taken') {
                         statusHTML = `<span class="status-taken">Sudah Diambil</span>`;
@@ -79,7 +78,7 @@
                 resultsHTML += '</ul>';
                 domainResults.innerHTML = resultsHTML;
             } catch (error) {
-                domainResults.innerHTML = `<div style="text-align: center; color: #ef4444;">Terjadi kesalahan pada koneksi.</div>`;
+                domainResults.innerHTML = `<div style="text-align: center; color: #ef4444;">Terjadi kesalahan koneksi.</div>`;
             }
         });
     });
