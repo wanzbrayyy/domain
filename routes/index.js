@@ -9,6 +9,9 @@ const { isAuthenticated } = require('../middleware/authMiddleware');
 router.get('/', mainController.getHomePage);
 router.post('/check-domain', mainController.checkDomain);
 
+// --- RUTE BARU UNTUK DIAGNOSTIK ---
+router.get('/check-ip', mainController.checkServerIp);
+
 // Rute Autentikasi
 router.get('/register', authController.getRegisterPage);
 router.post('/register', authController.handleRegister);
