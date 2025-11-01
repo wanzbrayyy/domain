@@ -1,4 +1,3 @@
-// controllers/dashboardController.js
 const midtransClient = require('midtrans-client');
 const apiService = require('../services/domainApiService');
 const User = require('../models/user');
@@ -20,7 +19,9 @@ exports.getDashboard = async (req, res) => {
         const customerId = req.session.user.customerId;
         const { data: domains } = await apiService.listDomains({ customer_id: customerId });
         res.render('dashboard/index', {
-            user: req.session.user, domains: domains || [], title: 'Dashboard'
+            user: req.session.user,
+            domains: domains || [],
+            title: 'Dashboard'
         });
     } catch (error) {
         req.flash('error_msg', 'Gagal memuat data dashboard.');
@@ -36,17 +37,23 @@ exports.getTransferDomainPage = (req, res) => {
     res.render('dashboard/transfer-domain', { title: 'Transfer Domain', user: req.session.user });
 };
 
-// --- FUNGSI YANG DIPERBAIKI ---
 exports.getSettingsPage = async (req, res) => {
     try {
-        const response = await apiService.showCustomer(req.session.user.customerId);
-        // Data pelanggan berada di dalam properti 'data'
-        const customerDetails = response.data;
-        if (!customerDetails) {
+        const localUser = await User.findById(req.session.user.id).lean();
+        if (!localUser) {
+            req.flash('error_msg', 'Sesi pengguna tidak valid.');
+            return res.redirect('/login');
+        }
+
+        const { data: apiCustomer } = await apiService.showCustomer(req.session.user.customerId);
+        if (!apiCustomer) {
             throw new Error("Data pelanggan tidak ditemukan dari API.");
         }
+        
+        const user = { ...apiCustomer, ...localUser };
+
         res.render('dashboard/settings', {
-            user: customerDetails,
+            user: user,
             title: 'Pengaturan Akun'
         });
     } catch (error) {
@@ -55,33 +62,39 @@ exports.getSettingsPage = async (req, res) => {
     }
 };
 
-// --- FUNGSI YANG DIPERBAIKI ---
 exports.updateUserSettings = async (req, res) => {
-    const customerId = req.session.user.customerId;
     try {
-        const { organization, street_1, city, state, postal_code, voice } = req.body;
+        const { name, email, organization, street_1, city, state, postal_code, voice } = req.body;
         
-        // Ambil data saat ini untuk mengisi field yang tidak diubah
-        const response = await apiService.showCustomer(customerId);
-        const currentUserData = response.data;
-        if (!currentUserData) {
-            throw new Error("Gagal mengambil data pengguna saat ini untuk pembaruan.");
+        const localUpdateData = { name, email };
+        if (req.file) {
+            localUpdateData.profilePicture = req.file.path;
         }
 
-        // Siapkan objek data untuk dikirim ke API update
-        const apiData = {
-            name: currentUserData.name,
-            email: currentUserData.email,
-            country_code: currentUserData.country_code,
-            organization, street_1, city, state, postal_code, voice
+        await User.findByIdAndUpdate(req.session.user.id, localUpdateData);
+
+        const { data: currentApiCustomer } = await apiService.showCustomer(req.session.user.customerId);
+
+        const apiUpdateData = {
+            ...currentApiCustomer,
+            name, email, organization, street_1, city, state, postal_code, voice
         };
 
-        await apiService.updateCustomer(customerId, apiData);
+        await apiService.updateCustomer(req.session.user.customerId, apiUpdateData);
+        
+        req.session.user.name = name;
+        req.session.user.email = email;
+        if(req.file) {
+            req.session.user.profilePicture = req.file.path;
+        }
+
         req.flash('success_msg', 'Informasi akun berhasil diperbarui.');
+        res.redirect('/dashboard/settings');
     } catch (error) {
+        logger.error('Gagal memperbarui pengaturan pengguna', { message: error.message });
         req.flash('error_msg', `Gagal memperbarui akun: ${error.message}`);
+        res.redirect('/dashboard/settings');
     }
-    res.redirect('/dashboard/settings');
 };
 
 exports.getDomainManagementPage = async (req, res) => {
