@@ -8,7 +8,6 @@ const domainPrices = {
     'org': 165000, 'xyz': 30000, 'default': 175000
 };
 
-// KESALAHAN ADA DI SINI, SEKARANG SUDAH DIPERBAIKI
 const snap = new midtransClient.Snap({
     isProduction: true,
     serverKey: process.env.MIDTRANS_SERVER_KEY,
@@ -49,14 +48,11 @@ exports.getSettingsPage = async (req, res) => {
             req.flash('error_msg', 'Sesi pengguna tidak valid.');
             return res.redirect('/login');
         }
-
         const { data: apiCustomer } = await apiService.showCustomer(req.session.user.customerId);
         if (!apiCustomer) {
             throw new Error("Data pelanggan tidak ditemukan dari API.");
         }
-        
         const user = { ...apiCustomer, ...localUser };
-
         res.render('dashboard/settings', {
             user: user,
             title: 'Pengaturan Akun'
@@ -70,23 +66,17 @@ exports.getSettingsPage = async (req, res) => {
 exports.updateUserSettings = async (req, res) => {
     try {
         const { name, email, organization, street_1, city, state, postal_code, voice } = req.body;
-        
         const localUpdateData = { name, email };
         if (req.file) {
             localUpdateData.profilePicture = req.file.path;
         }
-
         const updatedUser = await User.findByIdAndUpdate(req.session.user.id, localUpdateData, { new: true });
-
         const { data: currentApiCustomer } = await apiService.showCustomer(req.session.user.customerId);
-
         const apiUpdateData = {
             ...currentApiCustomer,
             name, email, organization, street_1, city, state, postal_code, voice
         };
-
         await apiService.updateCustomer(req.session.user.customerId, apiUpdateData);
-        
         req.session.user = {
             id: updatedUser._id,
             name: updatedUser.name,
@@ -95,7 +85,6 @@ exports.updateUserSettings = async (req, res) => {
             role: updatedUser.role,
             profilePicture: updatedUser.profilePicture
         };
-
         req.flash('success_msg', 'Informasi akun berhasil diperbarui.');
         res.redirect('/dashboard/settings');
     } catch (error) {
