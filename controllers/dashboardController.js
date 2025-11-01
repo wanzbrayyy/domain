@@ -1,13 +1,8 @@
-const midtransClient = require('midtrans-client');
 const apiService = require('../services/domainApiService');
 const User = require('../models/user');
+const Setting = require('../models/setting');
 const logger = require('../utils/logger');
-
-const domainPrices = {
-    'com': 150000, 'id': 250000, 'co.id': 120000, 'net': 160000,
-    'org': 165000, 'xyz': 30000, 'site': 45000, 'default': 175000
-};
-const WHOIS_PROTECTION_PRICE = 50000;
+const midtransClient = require('midtrans-client');
 
 const snap = new midtransClient.Snap({
     isProduction: true,
@@ -15,81 +10,94 @@ const snap = new midtransClient.Snap({
     clientKey: process.env.MIDTRANS_CLIENT_KEY
 });
 
-exports.getConfirmRegistrationPage = (req, res) => {
+exports.getDashboard = async (req, res) => {
+    try {
+        const localUser = await User.findById(req.session.user.id).lean();
+        req.session.user = { ...req.session.user, ...localUser };
+
+        const customerId = req.session.user.customerId;
+        const { data: domains } = await apiService.listDomains({ customer_id: customerId });
+        
+        res.render('dashboard/index', {
+            user: req.session.user,
+            domains: domains || [],
+            title: 'Dashboard'
+        });
+    } catch (error) {
+        req.flash('error_msg', 'Gagal memuat data dashboard.');
+        res.redirect('/');
+    }
+};
+
+exports.handleDomainOrderFlow = async (req, res) => {
     const { domain } = req.query;
     if (!domain) {
-        req.flash('error_msg', 'Nama domain tidak valid.');
-        return res.redirect('/dashboard/buy-domain');
+        req.flash('error_msg', 'Domain tidak valid.');
+        return res.redirect('/');
     }
-    const tld = domain.split('.').pop();
-    const price = domainPrices[tld] || domainPrices['default'];
-    
-    req.session.domain_order = {
-        domain: domain,
-        base_price: price
+
+    req.session.cart = {
+        type: 'domain',
+        item: { domain },
+        options: {
+            period: 1,
+            buy_whois_protection: false
+        }
     };
 
-    res.render('dashboard/confirm-registration', {
-        title: 'Konfirmasi Pesanan',
-        user: req.session.user,
-        order: { domain, price },
-        whoisPrice: WHOIS_PROTECTION_PRICE,
-        clientKey: process.env.MIDTRANS_CLIENT_KEY
-    });
+    if (req.session.user) {
+        res.redirect('/checkout');
+    } else {
+        res.redirect('/register');
+    }
 };
 
 exports.processDomainPayment = async (req, res) => {
     try {
-        const { period, buy_whois_protection } = req.body;
-        const order = req.session.domain_order;
+        const cart = req.session.cart;
         const user = req.session.user;
+        if (!cart || !user || cart.type !== 'domain') throw new Error('Sesi tidak valid.');
 
-        if (!order || !user) throw new Error('Sesi pesanan domain tidak valid. Silakan ulangi.');
-
-        const domainPriceTotal = order.base_price * period;
-        const whoisPriceTotal = buy_whois_protection ? WHOIS_PROTECTION_PRICE : 0;
-        const finalAmount = domainPriceTotal + whoisPriceTotal;
-        
-        order.period = period;
-        order.buy_whois_protection = buy_whois_protection;
-        order.final_price = finalAmount;
-        
         const orderId = `DOM-${user.id.slice(-4)}-${Date.now()}`;
+        
+        let itemDetails = [];
+        itemDetails.push({ id: cart.item.domain, price: cart.pricing.basePrice * cart.options.period, quantity: 1, name: `Registrasi Domain ${cart.item.domain} (${cart.options.period} Tahun)`});
+        if(cart.options.buy_whois_protection) {
+            itemDetails.push({ id: 'WHOIS', price: cart.pricing.whoisPrice, quantity: 1, name: 'Proteksi WHOIS'});
+        }
+
         const parameter = {
-            "transaction_details": { "order_id": orderId, "gross_amount": finalAmount },
-            "item_details": [
-                { "id": order.domain, "price": domainPriceTotal, "quantity": 1, "name": `Registrasi Domain ${order.domain} (${period} Tahun)` },
-                ...(buy_whois_protection ? [{ "id": "WHOIS", "price": whoisPriceTotal, "quantity": 1, "name": "Proteksi WHOIS" }] : [])
-            ],
+            "transaction_details": { "order_id": orderId, "gross_amount": cart.pricing.finalPrice },
+            "item_details": itemDetails,
             "customer_details": { "first_name": user.name, "email": user.email }
         };
+
         const transaction = await snap.createTransaction(parameter);
-        res.json({ token: transaction.token });
+        res.json({ token: transaction.token, orderId: orderId });
     } catch (error) {
-        logger.error('MIDTRANS: Gagal memproses pembayaran domain', { message: error.message });
         res.status(500).json({ error: error.message });
     }
 };
 
 exports.handleSuccessfulDomainRegistration = async (req, res) => {
     try {
-        const order = req.session.domain_order;
+        const cart = req.session.cart;
         const user = req.session.user;
-        if (!order || !user) throw new Error('Sesi untuk finalisasi tidak ditemukan.');
+        if (!cart || !user || cart.type !== 'domain') throw new Error('Sesi finalisasi tidak ditemukan.');
         
         const registrationData = {
-            name: order.domain,
-            period: order.period,
+            name: cart.item.domain,
+            period: cart.options.period,
             customer_id: user.customerId,
-            buy_whois_protection: order.buy_whois_protection,
+            buy_whois_protection: cart.options.buy_whois_protection,
             'nameserver[0]': 'ns1.digitalhostid.co.id',
             'nameserver[1]': 'ns2.digitalhostid.co.id'
         };
 
         await apiService.registerDomain(registrationData);
         
-        delete req.session.domain_order;
-        req.flash('success_msg', `Selamat! Domain ${order.domain} telah berhasil didaftarkan.`);
+        delete req.session.cart;
+        req.flash('success_msg', `Selamat! Domain ${cart.item.domain} telah berhasil didaftarkan.`);
         res.status(200).json({ message: 'OK' });
     } catch (error) {
         logger.error('FINALIZE: Gagal mendaftarkan domain setelah pembayaran', { message: error.message });
@@ -98,20 +106,6 @@ exports.handleSuccessfulDomainRegistration = async (req, res) => {
     }
 };
 
-exports.getDashboard = async (req, res) => {
-    try {
-        const localUser = await User.findById(req.session.user.id).lean();
-        req.session.user = { ...req.session.user, ...localUser };
-        const customerId = req.session.user.customerId;
-        const { data: domains } = await apiService.listDomains({ customer_id: customerId });
-        res.render('dashboard/index', {
-            user: req.session.user, domains: domains || [], title: 'Dashboard'
-        });
-    } catch (error) {
-        req.flash('error_msg', 'Gagal memuat data dashboard.');
-        res.redirect('/');
-    }
-};
 exports.getBuyDomainPage = (req, res) => {
     res.render('dashboard/buy-domain', { user: req.session.user, title: 'Beli Domain Baru' });
 };
