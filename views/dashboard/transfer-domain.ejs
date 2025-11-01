@@ -1,54 +1,6 @@
 <%- include('../partials/header', { title: 'Transfer Domain' }) %>
 
-<style>
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-    .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-        color: #333;
-    }
-    .form-control {
-        width: 100%;
-        padding: 12px 15px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        font-size: 1rem;
-        font-family: 'Poppins', sans-serif;
-        transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .form-control:focus {
-        outline: none;
-        border-color: var(--primary-accent, #6c63ff);
-        box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
-    }
-    .btn {
-        display: inline-block;
-        padding: 12px 28px;
-        border: none;
-        border-radius: 50px;
-        font-weight: 600;
-        text-decoration: none;
-        cursor: pointer;
-        transition: all 0.3s;
-    }
-    .btn-primary {
-        background: var(--primary-accent, #6c63ff);
-        color: white;
-    }
-    .btn-primary:hover {
-        background: var(--primary-accent-hover, #5a52d9);
-    }
-    .info-text {
-        color: #666;
-        font-size: 0.9rem;
-        margin-top: 1rem;
-    }
-</style>
-
-<h1><i class="fas fa-exchange-alt" style="margin-right: 10px;"></i> Transfer Domain Masuk</h1>
+<h1><i class="fas fa-exchange-alt"></i> Transfer Domain Masuk</h1>
 <p>Pindahkan domain Anda dari registrar lain ke DigitalHostID untuk pengelolaan yang lebih mudah.</p>
 
 <div class="card">
@@ -61,7 +13,7 @@
             <label for="auth_code">Kode EPP / Auth Code</label>
             <input type="text" name="auth_code" id="auth_code" class="form-control" placeholder="Dapatkan dari registrar Anda saat ini" required>
         </div>
-        <p class="info-text">
+        <p style="color: #666; font-size: 0.9rem;">
             <strong>Penting:</strong> Pastikan domain Anda sudah di-unlock (tidak dikunci) di registrar lama sebelum memulai proses transfer.
         </p>
         <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Mulai Proses Transfer</button>

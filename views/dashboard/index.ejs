@@ -1,20 +1,21 @@
-<%- include('../partials/header', { title: 'Dashboard', currentPath: '/dashboard' }) %>
+<%- include('../partials/header', { title: 'Dashboard' }) %>
 
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
     <h1>Selamat Datang, <%= user.name %>!</h1>
-    <div class="d-flex gap-2">
+    <div style="display: flex; gap: 1rem;">
         <a href="/dashboard/transfer-domain" class="btn btn-secondary">
-            <i class="fas fa-exchange-alt" style="margin-right: 8px;"></i> Transfer Domain
+            <i class="fas fa-exchange-alt"></i> Transfer Domain
         </a>
         <a href="/dashboard/buy-domain" class="btn btn-primary">
-            <i class="fas fa-plus" style="margin-right: 8px;"></i> Beli Domain Baru
+            <i class="fas fa-plus"></i> Beli Domain Baru
         </a>
     </div>
 </div>
 
 <div class="card">
-    <h2><i class="fas fa-globe" style="margin-right: 10px; color: var(--primary-accent);"></i>Domain Anda</h2>
-    <div style="overflow-x: auto;">
+    <h2><i class="fas fa-globe" style="margin-right: 10px; color: var(--nexus-primary);"></i>Domain Anda</h2>
+    
+    <div class="table-wrapper">
         <table>
             <thead>
                 <tr>
@@ -32,8 +33,11 @@
                             <td><%= domain.status_desc %></td>
                             <td><%= new Date(domain.expiry_date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) %></td>
                             <td>
-                                <a href="/dashboard/domain/<%= domain.id %>/manage" title="Kelola Domain">
+                                <a href="/dashboard/domain/<%= domain.id %>/manage" title="Kelola Domain" style="margin-right: 15px; font-size: 1.2rem;">
                                     <i class="fas fa-cog"></i>
+                                </a>
+                                <a href="#" title="Perbarui Kontak (Coming Soon)" style="font-size: 1.2rem;">
+                                    <i class="fas fa-address-book"></i>
                                 </a>
                             </td>
                         </tr>

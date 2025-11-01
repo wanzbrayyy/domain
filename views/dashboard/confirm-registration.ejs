@@ -1,6 +1,5 @@
 <%- include('../partials/header', { title: 'Konfirmasi Pesanan Domain' }) %>
 
-<!-- Script Midtrans Snap -->
 <script type="text/javascript" src="https://app.midtrans.com/snap/snap.js" data-client-key="<%= clientKey %>"></script>
 
 <div class="card" style="max-width: 600px; margin: 2rem auto;">
@@ -8,10 +7,10 @@
     <p>Satu langkah lagi untuk memiliki domain impian Anda.</p>
     
     <div style="margin-top: 1.5rem;">
-        <div class="detail-item"><span>Domain</span><strong style="font-size: 1.2rem;"><%= order.domain %></strong></div>
-        <div class="detail-item"><span>Periode Registrasi</span><span>1 Tahun</span></div>
-        <hr>
-        <div class="detail-item" style="font-size: 1.2rem;"><strong>Total Bayar</strong><strong>Rp <%= order.price.toLocaleString('id-ID') %></strong></div>
+        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee;"><span>Domain</span><strong style="font-size: 1.2rem;"><%= order.domain %></strong></div>
+        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee;"><span>Periode Registrasi</span><span>1 Tahun</span></div>
+        <hr style="border: none; margin: 1rem 0;">
+        <div style="display: flex; justify-content: space-between; font-size: 1.2rem;"><strong>Total Bayar</strong><strong>Rp <%= order.price.toLocaleString('id-ID') %></strong></div>
     </div>
     
     <button id="pay-button" class="btn btn-primary" style="width: 100%; margin-top: 2rem; padding: 15px; font-size: 1.1rem;">
@@ -28,7 +27,6 @@
                 snap.pay(data.token, {
                     onSuccess: function(result){
                         alert("Pembayaran berhasil! Mendaftarkan domain Anda...");
-                        // Kirim konfirmasi ke server untuk finalisasi registrasi
                         fetch('/dashboard/finalize-registration', { method: 'POST' })
                             .then(() => window.location.href = '/dashboard');
                     },
