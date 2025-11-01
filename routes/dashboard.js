@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { isAuthenticated } = require('../middleware/auth');
+const { isAuthenticated } = require('../middleware/authController');
 const upload = require('../config/cloudinary');
 const dashboardController = require('../controllers/dashboardController');
 
