@@ -1,85 +1,12 @@
 <%- include('partials/header', { title: 'Login' }) %>
 
 <style>
-    .login-container {
-        width: 100%;
-        max-width: 450px;
-    }
-    .card {
-        background-color: #ffffff;
-        border-radius: 10px;
-        padding: 2rem 2.5rem;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        border: 1px solid #e0e0e0;
-        width: 100%;
-    }
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-    .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-        color: #333;
-    }
-    .form-control {
-        width: 100%;
-        padding: 12px 15px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        font-size: 1rem;
-        font-family: 'Poppins', sans-serif;
-        transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .form-control:focus {
-        outline: none;
-        border-color: var(--primary-accent, #6c63ff);
-        box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
-    }
-    .btn {
-        display: inline-block;
-        width: 100%;
-        padding: 14px;
-        border: none;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 1.05rem;
-        text-decoration: none;
-        cursor: pointer;
-        transition: all 0.3s;
-        text-align: center;
-    }
-    .btn-primary {
-        background: var(--primary-accent, #6c63ff);
-        color: white;
-    }
-    .btn-primary:hover {
-        background: var(--primary-accent-hover, #5a52d9);
-        transform: translateY(-2px);
-    }
-    .alert {
-        padding: 1rem;
-        margin-bottom: 1.5rem;
-        border-radius: 8px;
-        border: 1px solid transparent;
-        text-align: center;
-    }
-    .alert-danger {
-        color: #721c24;
-        background-color: #f8d7da;
-        border-color: #f5c6cb;
-    }
-    .text-center {
-        text-align: center;
-    }
-    .mt-1 {
-        margin-top: 1rem;
-    }
+    .login-container { max-width: 450px; width: 100%; }
 </style>
 
 <div class="login-container">
     <div class="card">
-        <h1 class="text-center" style="margin-bottom: 2rem;">Login Akun</h1>
+        <h1 style="text-align: center; margin-bottom: 2rem;">Login Akun</h1>
 
         <% if (typeof error !== 'undefined' && error) { %>
             <div class="alert alert-danger"><%= error %></div>
@@ -94,9 +21,9 @@
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" class="form-control" required>
             </div>
-            <button type="submit" class="btn btn-primary">Masuk</button>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Masuk</button>
         </form>
-        <p class="text-center mt-1">
+        <p style="text-align: center; margin-top: 1rem;">
             Belum punya akun? <a href="/register">Daftar di sini</a>
         </p>
     </div>
