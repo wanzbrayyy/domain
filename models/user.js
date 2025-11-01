@@ -1,4 +1,3 @@
-// models/User.js
 const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
@@ -16,17 +15,22 @@ const UserSchema = new mongoose.Schema({
         required: true
     },
     customerId: {
-        type: Number,
+        type: String,
         required: true,
         unique: true
     },
     role: {
         type: String,
-        enum: ['customer', 'admin'],
-        default: 'customer'
+        default: 'user'
+    },
+    profilePicture: {
+        type: String,
+        default: ''
+    },
+    date: {
+        type: Date,
+        default: Date.now
     }
-}, {
-    timestamps: true
 });
 
 module.exports = mongoose.model('User', UserSchema);
