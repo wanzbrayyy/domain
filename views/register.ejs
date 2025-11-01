@@ -1,11 +1,6 @@
 <%- include('partials/header', { title: 'Registrasi' }) %>
 
-<style>
-    .register-container { max-width: 700px; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-</style>
-
-<div class="container register-container">
+<div style="max-width: 700px; width: 100%">
     <div class="card">
         <h1 style="text-align: center; margin-bottom: 2rem;">Buat Akun Baru</h1>
         <% if (error) { %><div class="alert alert-danger"><%= error %></div><% } %>

@@ -1,38 +1,29 @@
 <%- include('partials/header', { title: title }) %>
 
-<!-- PASTIKAN URL INI BENAR UNTUK MODE LIVE -->
 <script type="text/javascript"
     src="https://app.midtrans.com/snap/snap.js"
     data-client-key="<%= clientKey %>"></script>
 
-<style>
-    .checkout-container { max-width: 600px; margin: 2rem auto; }
-    .detail-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
-    .detail-item span:first-child { color: #555; }
-    .voucher-form { display: flex; gap: 10px; margin-top: 1rem; }
-    .voucher-form input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
-</style>
-
-<div class="card checkout-container">
+<div class="card" style="max-width: 600px; margin: 2rem auto;">
     <h2><i class="fas fa-shopping-cart"></i> Ringkasan Pesanan</h2>
     
     <div style="margin-top: 1.5rem;">
-        <div class="detail-item">
+        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
             <span>Paket</span>
             <span style="text-transform: capitalize; font-weight: 500;"><%= order.plan %></span>
         </div>
-        <div class="detail-item">
+        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
             <span>Harga Awal</span>
             <span>Rp <%= order.base_price.toLocaleString('id-ID') %></span>
         </div>
         <% if(order.voucher_code) { %>
-            <div class="detail-item">
+            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
                 <span>Voucher (<%= order.voucher_code %>)</span>
                 <span style="color: green;">- Rp <%= (order.base_price - order.final_price).toLocaleString('id-ID') %></span>
             </div>
         <% } %>
         <hr style="border: none; border-top: 1px dashed #ccc; margin: 1rem 0;">
-        <div class="detail-item" style="font-size: 1.2rem;">
+        <div style="display: flex; justify-content: space-between; font-size: 1.2rem;">
             <strong>Total Bayar</strong>
             <strong>Rp <%= order.final_price.toLocaleString('id-ID') %></strong>
         </div>
@@ -41,8 +32,8 @@
     <hr>
 
     <h3>Punya Kode Voucher?</h3>
-    <form action="/apply-voucher" method="POST" class="voucher-form">
-        <input type="text" name="voucher_code" placeholder="Masukkan kode voucher">
+    <form action="/apply-voucher" method="POST" style="display: flex; gap: 10px; margin-top: 1rem;">
+        <input type="text" name="voucher_code" placeholder="Masukkan kode voucher" class="form-control" style="flex-grow: 1;">
         <button type="submit" class="btn btn-secondary">Terapkan</button>
     </form>
     

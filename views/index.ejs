@@ -7,464 +7,149 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --nexus-primary-light-blue: #82aaff;
-            --nexus-secondary-purple: #8e44ad;
-            --nexus-dark-purple: #6c3483;
-            --nexus-promo-red: #e74c3c;
-            --nexus-accent-green: #2ecc71;
-            --nexus-background-dark: #1f1d2b;
-            --nexus-background-light: #f4f6f9;
-            --nexus-text-dark: #333333;
-            --nexus-text-light: #ffffff;
-            --nexus-text-gray: #8d8d8d;
-            --nexus-font-primary: 'Montserrat', sans-serif;
-            --nexus-font-secondary: 'Poppins', sans-serif;
-            --nexus-border-radius-sm: 8px;
-            --nexus-border-radius-lg: 16px;
-            --nexus-spacing-md: 30px;
-            --nexus-spacing-lg: 60px;
-            --nexus-shadow-light: 0 5px 15px rgba(0, 0, 0, 0.08);
-            --nexus-shadow-dark: 0 10px 30px rgba(0, 0, 0, 0.2);
-            --primary-accent: #82aaff; /* Added for consistency */
-        }
-
-        *, *::before, *::after {
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: var(--nexus-font-secondary);
-            margin: 0;
-            background-color: var(--nexus-background-light);
-            color: var(--nexus-text-dark);
-            line-height: 1.7;
-            overflow-x: hidden;
-            scroll-behavior: smooth;
-        }
-
-        .container {
-            max-width: 1140px;
-            margin: 0 auto;
-            padding: 0 15px;
-        }
-
-        h1, h2, h3 {
-            font-family: var(--nexus-font-primary);
-            font-weight: 800;
-            line-height: 1.2;
-        }
-
-        h1 {
-            font-size: 3.2rem;
-        }
-
-        h2 {
-            font-size: 2.5rem;
-        }
-
-        h3 {
-            font-size: 1.5rem;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 12px 28px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: none;
-            font-size: 0.95rem;
-            box-shadow: var(--nexus-shadow-light);
-        }
-
-        .btn-primary {
-            background: linear-gradient(45deg, var(--nexus-primary-light-blue), #577ed4);
-            color: var(--nexus-text-light);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 8px 20px rgba(130, 170, 255, 0.4);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(45deg, var(--nexus-secondary-purple), var(--nexus-dark-purple));
-            color: var(--nexus-text-light);
-        }
-
-        .btn-secondary:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 8px 20px rgba(142, 68, 173, 0.4);
-        }
-
-        .hero-section {
-            background: linear-gradient(135deg, var(--nexus-secondary-purple) 0%, var(--nexus-background-dark) 100%);
-            color: var(--nexus-text-light);
-            padding: var(--nexus-spacing-lg) 0;
-            text-align: center;
-        }
-
-        .domain-search {
-            padding: var(--nexus-spacing-lg) 0;
-            text-align: center;
-        }
-
-        #domain-search-form {
-            display: flex;
-            max-width: 600px;
-            margin: 0 auto;
-            box-shadow: var(--nexus-shadow-light);
-            border-radius: 50px;
-        }
-
-        #domain-input {
-            flex-grow: 1;
-            padding: 18px 25px;
-            border: 2px solid transparent;
-            font-size: 1rem;
-            border-radius: 50px 0 0 50px;
-            outline: none;
-        }
-
-        #domain-search-button {
-            padding: 18px 35px;
-            border-radius: 0 50px 50px 0;
-            background: var(--nexus-secondary-purple);
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-        }
-
-        #domain-results {
-            margin-top: 35px;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border-left-color: var(--nexus-secondary-purple);
-            animation: spin 1s ease infinite;
-            margin: 10px auto;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .domain-suggestion-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .suggestion-item {
-            background: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            border-radius: var(--nexus-border-radius-sm);
-            box-shadow: var(--nexus-shadow-light);
-            margin-bottom: 12px;
-        }
-
-        .status-available {
-            color: var(--nexus-accent-green);
-            font-weight: 600;
-        }
-
-        .status-taken {
-            color: var(--nexus-text-gray);
-        }
-
-        .pricing-slider-container {
-            position: relative;
-            max-width: 100%;
-            margin: 0 auto;
-        }
-
-        .pricing-grid {
-            display: flex;
-            overflow-x: auto;
-            scroll-snap-type: x mandatory;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-            padding-bottom: 20px;
-        }
-
-        .pricing-grid::-webkit-scrollbar {
-            display: none;
-        }
-
-        .pricing-card {
-            scroll-snap-align: center;
-            flex: 0 0 280px;
-            margin: 0 15px;
-            background: white;
-            border-radius: var(--nexus-border-radius-lg);
-            padding: 30px;
-            box-shadow: var(--nexus-shadow-light);
-            text-align: left;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .pricing-card:hover {
-            transform: translateY(-10px);
-            box-shadow: var(--nexus-shadow-dark);
-        }
-
-        .slider-nav {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .slider-nav button {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            font-size: 1.2rem;
-        }
-
-        .sidebar { /* Existing sidebar styles from header.ejs override this */
-            height: 100%;
-            width: 280px;
-            position: fixed;
-            z-index: 1001;
-            top: 0;
-            left: 0;
-            background-color: var(--nexus-background-dark);
-            padding-top: 20px;
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
-        }
-
-        .sidebar.open {
-            transform: translateX(0);
-        }
-
-        .sidebar-header {
-            padding: 0 25px 20px 25px;
-            text-align: center;
-            border-bottom: 1px solid #444;
-        }
-
-        .sidebar-header a {
-            color: var(--nexus-text-light);
-            text-decoration: none;
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        .sidebar-nav {
-            list-style: none;
-            padding: 20px 0;
-            margin: 0;
-        }
-
-        .sidebar-nav li a {
-            display: flex;
-            align-items: center;
-            padding: 15px 25px;
-            color: var(--nexus-text-light);
-            text-decoration: none;
-            transition: all 0.2s;
-            font-size: 1.05rem;
-        }
-
-        .sidebar-nav li a:hover {
-            background-color: var(--nexus-primary-light-blue);
-            color: var(--nexus-background-dark);
-        }
-
-        .sidebar-nav li a i {
-            width: 30px;
-            margin-right: 15px;
-            font-size: 1.2rem;
-            text-align: center;
-        }
-
-        #main-top-bar {
-            position: absolute;
-            top: 25px;
-            left: 25px;
-            z-index: 500;
-        }
-
-        #sidebar-toggle {
-            font-size: 2rem;
-            cursor: pointer;
-            color: var(--nexus-text-light);
-            text-shadow: 0 2px 4px rgba(0,0,0,0.4);
-        }
-
-        .sidebar-close {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 1.5rem;
-            color: var(--nexus-text-light);
-            cursor: pointer;
-        }
-
-        .voucher-alert {
-            background: linear-gradient(45deg, var(--nexus-secondary-purple), var(--nexus-dark-purple));
-            color: white;
-            padding: 15px;
-            text-align: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .voucher-alert .close-alert {
-            float: right;
-            cursor: pointer;
-            font-size: 1.2rem;
-            </style>
+        :root { --nexus-primary: #82aaff; --nexus-primary-dark: #577ed4; --nexus-secondary: #8e44ad; --nexus-secondary-dark: #6c3483; --nexus-background-dark: #1f1d2b; --nexus-background-light: #f4f6f9; --nexus-text-dark: #333333; --nexus-text-light: #ffffff; --nexus-font-primary: 'Montserrat', sans-serif; --nexus-font-secondary: 'Poppins', sans-serif; --nexus-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); --nexus-radius: 8px; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: var(--nexus-font-secondary); background-color: var(--nexus-background-light); color: var(--nexus-text-dark); line-height: 1.7; overflow-x: hidden; scroll-behavior: smooth; }
+        .container { max-width: 1140px; margin: 0 auto; padding: 0 15px; }
+        h1, h2, h3 { font-family: var(--nexus-font-primary); font-weight: 800; line-height: 1.2; }
+        h1 { font-size: 3.2rem; }
+        h2 { font-size: 2.5rem; text-align: center; margin-bottom: 2rem; }
+        h3 { font-size: 1.5rem; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 28px; border: none; border-radius: 50px; font-weight: 600; text-decoration: none; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+        .btn-primary { background: linear-gradient(45deg, var(--nexus-primary), var(--nexus-primary-dark)); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(130, 170, 255, 0.4); }
+        .btn-secondary { background: linear-gradient(45deg, var(--nexus-secondary), var(--nexus-secondary-dark)); color: white; }
+        .btn-secondary:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(142, 68, 173, 0.4); }
+        .hero-section { background: linear-gradient(135deg, var(--nexus-secondary) 0%, var(--nexus-background-dark) 100%); color: var(--nexus-text-light); padding: 80px 0; text-align: center; }
+        .domain-search-section { padding: 60px 0; }
+        #domain-search-form { display: flex; max-width: 700px; margin: 0 auto; box-shadow: var(--nexus-shadow); border-radius: 50px; }
+        #domain-input { flex-grow: 1; padding: 18px 25px; border: 2px solid transparent; font-size: 1rem; border-radius: 50px 0 0 50px; outline: none; }
+        #domain-search-button { padding: 18px 35px; border-radius: 0 50px 50px 0; background: var(--nexus-secondary); color: white; border: none; cursor: pointer; font-size: 1rem; font-weight: 600; }
+        #domain-results { margin-top: 35px; max-width: 700px; margin-left: auto; margin-right: auto; }
+        .spinner { border: 4px solid rgba(0,0,0,0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: var(--nexus-secondary); animation: spin 1s ease infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .domain-suggestion-list { list-style: none; padding: 0; }
+        .suggestion-item { background: white; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-radius: var(--nexus-radius); box-shadow: var(--nexus-shadow); margin-bottom: 12px; }
+        .status-available { color: #10b981; font-weight: 600; }
+        .status-taken { color: #6b7280; }
+        .pricing-section { padding: 60px 0; }
+        .pricing-slider-container { position: relative; max-width: 100%; margin: 0 auto; }
+        .pricing-grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; padding-bottom: 20px; }
+        .pricing-grid::-webkit-scrollbar { display: none; }
+        .pricing-card { scroll-snap-align: center; flex: 0 0 280px; margin: 0 15px; background: white; border-radius: 16px; padding: 30px; box-shadow: var(--nexus-shadow); text-align: left; transition: all 0.3s ease; display: flex; flex-direction: column; }
+        .pricing-card:hover { transform: translateY(-10px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); }
+        .pricing-card h3 { margin-bottom: 0.5rem; } .pricing-card p { color: #6b7280; margin-bottom: 1rem; } .pricing-card div:first-of-type { font-size: 2.5rem; font-weight: 700; margin-bottom: 1.5rem; } .pricing-card ul { list-style: none; padding: 0; margin-bottom: 2rem; } .pricing-card ul li { margin-bottom: 0.5rem; } .pricing-card .btn { margin-top: auto; text-align: center; }
+        .slider-nav { text-align: center; margin-top: 20px; } .slider-nav button { background: white; border: 1px solid #ddd; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 1.2rem; }
+        .voucher-alert { background: linear-gradient(45deg, var(--nexus-secondary), var(--nexus-secondary-dark)); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; }
+        .voucher-alert .close-alert { float: right; cursor: pointer; font-size: 1.2rem; }
+    </style>
 </head>
 <body>
-    <% if (voucher) { %>
-    <div class="voucher-alert" id="voucher-alert">
-        <span class="close-alert" onclick="document.getElementById('voucher-alert').style.display='none'">&times;</span>
-        <strong>PROMO BARU!</strong> Gunakan kode <strong><%= voucher.code %></strong> untuk diskon <%= voucher.discount %>%.
+
+<%
+    const logoURL = "https://web.cinema-universe.xyz/assets/images/profiles/user_2_6901a4e18aae3_IMG_20251029_115453.png";
+%>
+
+<% if (voucher) { %>
+<div class="voucher-alert" id="voucher-alert">
+    <span class="close-alert" onclick="document.getElementById('voucher-alert').style.display='none'">&times;</span>
+    <strong>PROMO BARU!</strong> Gunakan kode <strong><%= voucher.code %></strong> untuk diskon <%= voucher.discount %>%.
+</div>
+<% } %>
+
+<%- include('partials/header', { user: user, title: 'Welcome', notifications: [] }) %>
+
+<main>
+    <section class="hero-section">
+        <div class="container">
+            <h1>Semua yang Anda Butuhkan untuk Sukses Online</h1>
+            <p style="max-width: 600px; margin: 1rem auto 2rem; font-size: 1.1rem;">Mulai dari domain, hosting, hingga alat canggih untuk mengembangkan bisnis Anda.</p>
+            <a href="#pricing" class="btn btn-primary">Lihat Paket Sekarang</a>
+        </div>
+    </section>
+
+    <% if (promo) { %>
+    <div style="padding: 0 15px; margin-top: -50px; position: relative; z-index: 10;">
+        <div style="background: linear-gradient(110deg, var(--nexus-primary) 0%, #6c5ce7 100%); color: var(--nexus-text-light); border-radius: 16px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-width: 800px; margin: 0 auto; text-align: center;">
+            <h3><%= promo.title %></h3>
+            <p><%= promo.message %></p>
+            <a href="<%= promo.link %>" class="btn btn-secondary" style="margin-top: 1rem;">Lihat Detail</a>
+        </div>
     </div>
     <% } %>
 
-    <aside class="sidebar" id="sidebar">
-        <i class="fas fa-times sidebar-close" id="sidebar-close"></i>
-        <div class="sidebar-header">
-            <a href="/">
-                <img src="/images/logo.png" alt="Logo" style="height:40px; border-radius: 50%;">
-                <span style="font-size: 1.4rem; font-weight: 700;">DigitalHostID</span>
-            </a>
+    <section id="domain-search" class="domain-search-section">
+        <div class="container">
+            <h2>Wujudkan Ide Anda dengan Domain Sempurna</h2>
+            <form id="domain-search-form">
+                <input type="text" id="domain-input" placeholder="contohdomain.id atau usahadigital" required>
+                <button type="submit" id="domain-search-button"><i class="fas fa-search"></i> Cari</button>
+            </form>
+            <div id="domain-results"></div>
         </div>
-        <ul class="sidebar-nav">
-             <% if (user) { %>
-                <li><a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-                <li><a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
-             <% } else { %>
-                <li><a href="#domain-search"><i class="fas fa-search"></i> Cari Domain</a></li>
-                <li><a href="#pricing"><i class="fas fa-tags"></i> Lihat Promo</a></li>
-                <li><a href="/register"><i class="fas fa-user-plus"></i> Registrasi</a></li>
-                <li><a href="/login"><i class="fas fa-sign-in-alt"></i> Login</a></li>
-             <% } %>
-        </ul>
-    </aside>
+    </section>
 
-    <div id="main-top-bar">
-        <i class="fas fa-bars" id="sidebar-toggle"></i>
-    </div>
-
-    <main>
-        <section class="hero-section">
-            <div class="container">
-                <h1>Semua yang Anda Butuhkan untuk Sukses Online</h1>
-                <a href="#pricing" class="btn btn-secondary" style="margin-top: 1rem;">Lihat Paket Sekarang</a>
-            </div>
-        </section>
-
-        <% if (promo) { %>
-        <div style="padding: 0 15px; margin-top: -50px; position: relative; z-index: 10;">
-            <div style="background: linear-gradient(110deg, var(--nexus-primary-light-blue) 0%, #6c5ce7 100%); color: var(--nexus-text-light); border-radius: var(--nexus-border-radius-lg); padding: 30px; box-shadow: var(--nexus-shadow-dark); max-width: 800px; margin: 0 auto; text-align: center;">
-                <h3><%= promo.title %></h3>
-                <p><%= promo.message %></p>
-                <a href="<%= promo.link %>" class="btn btn-secondary">Lihat Detail</a>
-            </div>
-        </div>
-        <% } %>
-
-        <section id="domain-search" class="domain-search" style="padding-top: var(--nexus-spacing-lg);">
-            <div class="container">
-                <h2>Wujudkan Ide Anda dengan Domain Sempurna</h2>
-                <form id="domain-search-form">
-                    <input type="text" id="domain-input" placeholder="contohdomain.id atau usahadigital" required>
-                    <button type="submit" id="domain-search-button">Cari</button>
-                </form>
-                <div id="domain-results"></div>
-            </div>
-        </section>
-
-        <section id="pricing" style="padding: var(--nexus-spacing-lg) 0;">
-            <div class="container" style="text-align: center;">
-                <h2>Pilih Paket Terbaik Anda</h2>
-                <div class="pricing-slider-container">
-                    <div class="pricing-grid" id="pricing-grid">
-                        <div class="pricing-card"><h3>Personal</h3><p>Untuk blog & portofolio.</p><div><sup>Rp</sup>12.000<span>/bln</span></div><ul><li><i class="fas fa-check-circle"></i> 1 Website</li></ul><a href="/register?plan=personal" class="btn btn-primary">Pilih Personal</a></div>
-                        <div class="pricing-card"><h3>Startup</h3><p>Bagus untuk memulai.</p><div><sup>Rp</sup>25.000<span>/bln</span></div><ul><li><i class="fas fa-check-circle"></i> 50 Website</li></ul><a href="/register?plan=startup" class="btn btn-primary">Pilih Startup</a></div>
-                        <div class="pricing-card"><h3>Bisnis</h3><p>Sempurna untuk UKM.</p><div><sup>Rp</sup>39.000<span>/bln</span></div><ul><li><i class="fas fa-check-circle"></i> 100 Website</li></ul><a href="/register?plan=bisnis" class="btn btn-secondary">Pilih Bisnis</a></div>
-                        <div class="pricing-card"><h3>Enterprise</h3><p>Traffic tinggi & toko online.</p><div><sup>Rp</sup>59.000<span>/bln</span></div><ul><li><i class="fas fa-check-circle"></i> 300 Website</li></ul><a href="/register?plan=enterprise" class="btn btn-primary">Pilih Enterprise</a></div>
-                    </div>
-                    <div class="slider-nav"><button id="slide-left"><i class="fas fa-arrow-left"></i></button><button id="slide-right"><i class="fas fa-arrow-right"></i></button></div>
+    <section id="pricing" class="pricing-section">
+        <div class="container">
+            <h2>Pilih Paket Terbaik Anda</h2>
+            <div class="pricing-slider-container">
+                <div class="pricing-grid" id="pricing-grid">
+                    <div class="pricing-card"><h3>Personal</h3><p>Untuk blog & portofolio.</p><div><sup>Rp</sup>12.000<span>/bln</span></div><ul><li><i class="fas fa-check-circle"></i> 1 Website</li></ul><a href="/register?plan=personal" class="btn btn-primary">Pilih Personal</a></div>
+                    <div class="pricing-card"><h3>Startup</h3><p>Bagus untuk memulai.</p><div><sup>Rp</sup>25.000<span>/bln</span></div><ul><li><i class="fas fa-check-circle"></i> 50 Website</li></ul><a href="/register?plan=startup" class="btn btn-primary">Pilih Startup</a></div>
+                    <div class="pricing-card"><h3>Bisnis</h3><p>Sempurna untuk UKM.</p><div><sup>Rp</sup>39.000<span>/bln</span></div><ul><li><i class="fas fa-check-circle"></i> 100 Website</li></ul><a href="/register?plan=bisnis" class="btn btn-secondary">Pilih Bisnis</a></div>
+                    <div class="pricing-card"><h3>Enterprise</h3><p>Traffic tinggi & toko online.</p><div><sup>Rp</sup>59.000<span>/bln</span></div><ul><li><i class="fas fa-check-circle"></i> 300 Website</li></ul><a href="/register?plan=enterprise" class="btn btn-primary">Pilih Enterprise</a></div>
                 </div>
+                <div class="slider-nav"><button id="slide-left"><i class="fas fa-arrow-left"></i></button><button id="slide-right"><i class="fas fa-arrow-right"></i></button></div>
             </div>
-        </section>
-    </main>
+        </div>
+    </section>
+</main>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const userIsLoggedIn = !!<%- JSON.stringify(user || null) %>;
-            const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('sidebar-toggle');
-            const sidebarClose = document.getElementById('sidebar-close');
-            if (sidebarToggle) { sidebarToggle.addEventListener('click', () => sidebar.classList.add('open')); }
-            if (sidebarClose) { sidebarClose.addEventListener('click', () => sidebar.classList.remove('open')); }
-            const domainForm = document.getElementById('domain-search-form');
-            const domainInput = document.getElementById('domain-input');
-            const domainResults = document.getElementById('domain-results');
-            domainForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const keyword = domainInput.value.trim();
-                if (!keyword) { domainResults.innerHTML = `<div>Harap masukkan nama domain.</div>`; return; }
-                domainResults.innerHTML = '<div class="spinner"></div>';
-                try {
-                    const response = await fetch('/check-domain', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keyword: keyword }) });
-                    if (!response.ok) throw new Error('Network error');
-                    const results = await response.json();
-                    let resultsHTML = '<ul class="domain-suggestion-list">';
-                    results.forEach(result => {
-                        let statusHTML = '';
-                        if (result.error) {
-                            statusHTML = `<span class="status-taken">Gagal memeriksa</span>`;
-                        } else if (result.isAvailable) {
-                            const buyUrl = userIsLoggedIn ? `/dashboard/confirm-registration?domain=${result.domain}` : `/register?domain=${result.domain}`;
-                            statusHTML = `<div><span class="status-available">TERSEDIA</span> <a href="${buyUrl}" class="btn btn-secondary btn-small">Daftar</a></div>`;
-                        } else {
-                            statusHTML = `<span class="status-taken">Sudah Diambil</span>`;
-                        }
-                        resultsHTML += `<li class="suggestion-item"><span>${result.domain}</span> ${statusHTML}</li>`;
-                    });
-                    resultsHTML += '</ul>';
-                    domainResults.innerHTML = resultsHTML;
-                } catch (error) {
-                    domainResults.innerHTML = `<div>Terjadi kesalahan pada koneksi.</div>`;
-                }
-            });
-            const pricingGrid = document.getElementById('pricing-grid');
-            const slideLeft = document.getElementById('slide-left');
-            const slideRight = document.getElementById('slide-right');
-            const cardWidth = 280 + 30;
-            if (slideLeft) slideLeft.addEventListener('click', () => { pricingGrid.scrollBy({ left: -cardWidth, behavior: 'smooth' }); });
-            if (slideRight) slideRight.addEventListener('click', () => { pricingGrid.scrollBy({ left: cardWidth, behavior: 'smooth' }); });
+<%- include('partials/footer', { user: user, title: 'Welcome' }) %>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const userIsLoggedIn = !!<%- JSON.stringify(user || null) %>;
+        const domainForm = document.getElementById('domain-search-form');
+        const domainInput = document.getElementById('domain-input');
+        const domainResults = document.getElementById('domain-results');
+        
+        domainForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const keyword = domainInput.value.trim();
+            if (!keyword) { domainResults.innerHTML = `<div style="text-align: center; color: var(--nexus-danger);">Harap masukkan nama domain.</div>`; return; }
+            domainResults.innerHTML = '<div class="spinner"></div>';
+            try {
+                const response = await fetch('/check-domain', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keyword: keyword }) });
+                if (!response.ok) throw new Error('Network error');
+                const results = await response.json();
+                let resultsHTML = '<ul class="domain-suggestion-list">';
+                results.forEach(result => {
+                    let statusHTML = '';
+                    if (result.error) {
+                        statusHTML = `<span class="status-taken">Gagal memeriksa</span>`;
+                    } else if (result.isAvailable) {
+                        const buyUrl = userIsLoggedIn ? `/dashboard/buy-domain?domain=${result.domain}` : `/register?domain=${result.domain}`;
+                        statusHTML = `<div><span class="status-available">TERSEDIA</span> <a href="${buyUrl}" class="btn btn-secondary btn-sm">Daftar</a></div>`;
+                    } else {
+                        statusHTML = `<span class="status-taken">Sudah Diambil</span>`;
+                    }
+                    resultsHTML += `<li class="suggestion-item"><span>${result.domain}</span> ${statusHTML}</li>`;
+                });
+                resultsHTML += '</ul>';
+                domainResults.innerHTML = resultsHTML;
+            } catch (error) {
+                domainResults.innerHTML = `<div style="text-align: center; color: var(--nexus-danger);">Terjadi kesalahan pada koneksi.</div>`;
+            }
         });
-    </script>
+
+        const pricingGrid = document.getElementById('pricing-grid');
+        const slideLeft = document.getElementById('slide-left');
+        const slideRight = document.getElementById('slide-right');
+        const cardWidth = 280 + 30;
+        if (slideLeft) slideLeft.addEventListener('click', () => { pricingGrid.scrollBy({ left: -cardWidth, behavior: 'smooth' }); });
+        if (slideRight) slideRight.addEventListener('click', () => { pricingGrid.scrollBy({ left: cardWidth, behavior: 'smooth' }); });
+    });
+</script>
 </body>
 </html>
