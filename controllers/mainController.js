@@ -2,9 +2,9 @@ const apiService = require('../services/domainApiService');
 const logger = require('../utils/logger');
 const Promo = require('../models/promo');
 const Voucher = require('../models/voucher');
-const axios = require('axios'); // Pastikan axios diimpor
+const axios = require('axios');
 
-const tldsToCheckDefault = ['.com', '.id', '.co.id', '.net', '.org', '.xyz'];
+const tldsToCheckDefault = ['.com', '.id', '.co.id', '.net', '.org', '.xyz', '.site'];
 
 exports.getHomePage = async (req, res) => {
     try {
@@ -24,11 +24,11 @@ exports.getHomePage = async (req, res) => {
 exports.checkDomain = async (req, res) => {
     const { keyword } = req.body;
     if (!keyword || keyword.trim() === '') {
-        return res.status(400).json({ message: 'Kata kunci domain diperlukan.' });
+        return res.status(400).json([]);
     }
 
     let domainsToSearch = [];
-    const sanitizedKeyword = keyword.trim().toLowerCase();
+    const sanitizedKeyword = keyword.trim().toLowerCase().replace(/\s/g, '');
 
     if (sanitizedKeyword.includes('.')) {
         domainsToSearch.push(sanitizedKeyword);
@@ -39,16 +39,21 @@ exports.checkDomain = async (req, res) => {
     try {
         const checkPromises = domainsToSearch.map(domainName => {
             return apiService.checkDomainAvailability(domainName)
-                .then(apiResult => ({
-                    domain: domainName,
-                    isAvailable: apiResult.status === 'available',
-                    error: false
-                }))
+                .then(apiResult => {
+                    // **PERBAIKAN UTAMA ADA DI SINI**
+                    // Kita meneruskan objek asli dari service yang sudah memiliki properti 'name' dan 'status'
+                    return {
+                        ...apiResult,
+                        error: false 
+                    };
+                })
                 .catch(error => {
                     logger.error(`Gagal memeriksa TLD: ${domainName}`, { message: error.message });
+                    // **PERBAIKAN KONSISTENSI DI SINI**
+                    // Kita membuat objek error dengan properti 'name' dan 'status' agar frontend tidak bingung
                     return {
-                        domain: domainName,
-                        isAvailable: false,
+                        name: domainName,
+                        status: 'error',
                         error: true,
                         errorMessage: error.message
                     };
@@ -58,14 +63,13 @@ exports.checkDomain = async (req, res) => {
         res.status(200).json(results);
     } catch (error) {
         logger.error('Error besar di checkDomain', { message: error.message });
-        res.status(500).json({ message: error.message || 'Terjadi kesalahan pada server.' });
+        res.status(500).json([{ name: keyword, status: 'error', error: true, message: 'Server error' }]);
     }
 };
 
-// --- FUNGSI BARU UNTUK DIAGNOSTIK ---
+
 exports.checkServerIp = async (req, res) => {
     try {
-        // Kita bertanya ke layanan luar "apa IP saya?"
         const response = await axios.get('https://api.ipify.org?format=json');
         const serverIp = response.data.ip;
         res.status(200).json({
