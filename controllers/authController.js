@@ -1,4 +1,3 @@
-// controllers/authController.js
 const apiService = require('../services/domainApiService');
 const User = require('../models/user');
 const bcrypt = require('bcryptjs');
@@ -7,7 +6,7 @@ const logger = require('../utils/logger');
 exports.getRegisterPage = (req, res) => {
     const { domain, plan } = req.query;
     res.render('register', {
-        error: null,
+        error: req.flash('error_msg')[0] || null,
         domain: domain || '',
         plan: plan || '',
         user: null 
@@ -16,16 +15,17 @@ exports.getRegisterPage = (req, res) => {
 
 exports.getLoginPage = (req, res) => {
     res.render('login', { 
-        error: null,
+        error: req.flash('error_msg')[0] || null,
         user: null 
     });
 };
+
 exports.handleRegister = async (req, res) => {
-    logger.info('CONTROLLER: Proses registrasi dimulai.');
     const { name, email, password, password_confirmation, organization, street_1, city, state, country_code, postal_code, voice, plan } = req.body;
 
     if (password !== password_confirmation) {
-        return res.status(400).render('register', { error: 'Konfirmasi password tidak cocok.', domain: '', plan });
+        req.flash('error_msg', 'Konfirmasi password tidak cocok.');
+        return res.redirect('/register');
     }
 
     try {
@@ -44,7 +44,7 @@ exports.handleRegister = async (req, res) => {
             name, email,
             password: hashedPassword,
             customerId: customerApiId,
-            role: 'customer'
+            role: 'user'
         });
         await newUser.save();
         
@@ -53,19 +53,18 @@ exports.handleRegister = async (req, res) => {
             name: newUser.name,
             email: newUser.email,
             customerId: newUser.customerId,
-            role: newUser.role
+            role: newUser.role,
+            profilePicture: newUser.profilePicture
         };
 
-        logger.info('CONTROLLER: Registrasi berhasil, mengarahkan ke checkout.');
-        res.redirect(`/checkout?plan=${plan}`);
+        if (plan) {
+            return res.redirect(`/checkout?plan=${plan}`);
+        }
+        res.redirect('/dashboard');
 
     } catch (error) {
-        logger.error('CONTROLLER: Terjadi error fatal dalam proses registrasi.', { errorMessage: error.message });
-        res.status(500).render('register', { 
-            error: error.message || 'Gagal mendaftar, silakan coba lagi.',
-            domain: '',
-            plan
-        });
+        req.flash('error_msg', error.message || 'Gagal mendaftar, email mungkin sudah digunakan.');
+        res.redirect('/register');
     }
 };
 
@@ -74,12 +73,14 @@ exports.handleLogin = async (req, res) => {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(400).render('login', { error: 'Email atau password salah.' });
+            req.flash('error_msg', 'Email atau password salah.');
+            return res.redirect('/login');
         }
         
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(400).render('login', { error: 'Email atau password salah.' });
+            req.flash('error_msg', 'Email atau password salah.');
+            return res.redirect('/login');
         }
 
         req.session.user = {
@@ -87,12 +88,14 @@ exports.handleLogin = async (req, res) => {
             name: user.name,
             email: user.email,
             customerId: user.customerId,
-            role: user.role
+            role: user.role,
+            profilePicture: user.profilePicture
         };
         res.redirect('/dashboard');
 
     } catch (error) {
-         res.status(500).render('login', { error: 'Terjadi kesalahan pada server.' });
+         req.flash('error_msg', 'Terjadi kesalahan pada server.');
+         res.redirect('/login');
     }
 };
 

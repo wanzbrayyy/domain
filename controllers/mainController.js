@@ -1,4 +1,3 @@
-// controllers/mainController.js
 const apiService = require('../services/domainApiService');
 const logger = require('../utils/logger');
 const Promo = require('../models/promo');

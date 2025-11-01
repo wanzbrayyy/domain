@@ -1,4 +1,3 @@
-// controllers/adminController.js
 const apiService = require('../services/domainApiService');
 const User = require('../models/user');
 const Voucher = require('../models/voucher');
@@ -10,26 +9,41 @@ exports.getAdminDashboard = async (req, res) => {
     try {
         const userCount = await User.countDocuments();
         const domainsResponse = await apiService.listDomains({ limit: 1 });
-        const domainCount = domainsResponse && domainsResponse.meta ? domainsResponse.meta.total : 0;
+        const domainCount = domainsResponse?.meta?.total || 0;
+
         res.render('admin/index', {
-            title: 'Admin Dashboard', user: req.session.user,
-            userCount: userCount, domainCount: domainCount
+            title: 'Admin Dashboard',
+            user: req.session.user,
+            userCount: userCount,
+            domainCount: domainCount
         });
     } catch (error) {
-        logger.error("FATAL ERROR di getAdminDashboard", { message: error.message });
-        res.status(500).render('admin/error', { message: "Gagal memuat dashboard admin." });
+        logger.error("Error loading admin dashboard", { message: error.message });
+        res.status(500).render('admin/error', { 
+            user: req.session.user,
+            message: "Gagal memuat dashboard admin." 
+        });
     }
 };
 
 exports.getDomainsPage = async (req, res) => {
     try {
-        const { data: domains } = await apiService.listDomains({ limit: 20, 'f_params[orderBy][field]': 'created_at', 'f_params[orderBy][type]': 'desc' });
+        const { data: domains } = await apiService.listDomains({ 
+            limit: 20, 
+            'f_params[orderBy][field]': 'created_at', 
+            'f_params[orderBy][type]': 'desc' 
+        });
         res.render('admin/domains', {
-            domains: domains || [], title: 'Manajemen Domain', user: req.session.user
+            domains: domains || [],
+            title: 'Manajemen Domain',
+            user: req.session.user
         });
     } catch (error) {
-        logger.error("FATAL ERROR di getDomainsPage", { message: error.message });
-        res.status(500).render('admin/error', { message: "Gagal memuat daftar domain." });
+        logger.error("Error loading domains page", { message: error.message });
+        res.status(500).render('admin/error', { 
+            user: req.session.user,
+            message: "Gagal memuat daftar domain." 
+        });
     }
 };
 
@@ -66,21 +80,25 @@ exports.getVouchersPage = async (req, res) => {
     try {
         const vouchers = await Voucher.find().sort({ createdAt: -1 });
         res.render('admin/vouchers', {
-            vouchers: vouchers || [], title: 'Kelola Voucher', user: req.session.user
+            vouchers: vouchers || [],
+            title: 'Kelola Voucher',
+            user: req.session.user
         });
     } catch (error) {
-        res.status(500).render('admin/error', { message: "Gagal memuat halaman voucher." });
+        res.status(500).render('admin/error', { 
+            user: req.session.user,
+            message: "Gagal memuat halaman voucher." 
+        });
     }
 };
 
 exports.createVoucher = async (req, res) => {
     try {
-        const { code, discount, expiryDate, applicable_plans } = req.body;
+        const { code, discount, expiryDate } = req.body;
         await Voucher.create({
             code: code.toUpperCase(),
             discount,
             expiryDate,
-            applicable_plans: applicable_plans || []
         });
         req.flash('success_msg', 'Voucher baru berhasil dibuat.');
         res.redirect('/admin/vouchers');
@@ -94,10 +112,15 @@ exports.getPromosPage = async (req, res) => {
     try {
         const promos = await Promo.find().sort({ createdAt: -1 });
         res.render('admin/promos', {
-            promos: promos || [], title: 'Kelola Promo', user: req.session.user
+            promos: promos || [],
+            title: 'Kelola Promo',
+            user: req.session.user
         });
     } catch (error) {
-        res.status(500).render('admin/error', { message: "Gagal memuat halaman promo." });
+        res.status(500).render('admin/error', { 
+            user: req.session.user,
+            message: "Gagal memuat halaman promo." 
+        });
     }
 };
 
@@ -129,10 +152,15 @@ exports.getNotificationsPage = async (req, res) => {
     try {
         const users = await User.find({}, 'name email');
         res.render('admin/notifications', {
-            users: users, title: 'Kirim Notifikasi', user: req.session.user
+            users: users,
+            title: 'Kirim Notifikasi',
+            user: req.session.user
         });
     } catch (error) {
-        res.status(500).render('admin/error', { message: "Gagal memuat halaman notifikasi." });
+        res.status(500).render('admin/error', { 
+            user: req.session.user,
+            message: "Gagal memuat halaman notifikasi." 
+        });
     }
 };
 

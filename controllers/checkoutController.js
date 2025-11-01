@@ -1,4 +1,3 @@
-// controllers/checkoutController.js
 const midtransClient = require('midtrans-client');
 const Voucher = require('../models/voucher');
 const logger = require('../utils/logger');
@@ -9,7 +8,7 @@ const planPrices = {
 };
 
 const snap = new midtransClient.Snap({
-    isProduction: true, // SET KE TRUE UNTUK LIVE
+    isProduction: true,
     serverKey: process.env.MIDTRANS_SERVER_KEY,
     clientKey: process.env.MIDTRANS_CLIENT_KEY
 });
@@ -23,7 +22,6 @@ exports.getCheckoutPage = (req, res) => {
         };
     }
 
-    // Jika setelah semua itu tidak ada session order, redirect ke harga
     if (!req.session.order) {
         req.flash('error_msg', 'Silakan pilih paket terlebih dahulu.');
         return res.redirect('/#pricing');
@@ -31,6 +29,7 @@ exports.getCheckoutPage = (req, res) => {
 
     res.render('checkout', {
         title: 'Checkout',
+        user: req.session.user,
         order: req.session.order,
         clientKey: process.env.MIDTRANS_CLIENT_KEY
     });
@@ -40,7 +39,6 @@ exports.applyVoucher = async (req, res) => {
     const { voucher_code } = req.body;
     const order = req.session.order;
 
-    // Perbaikan: Jika tidak ada session order, jangan proses.
     if (!order) {
         req.flash('error_msg', 'Sesi pesanan Anda telah berakhir. Silakan pilih paket lagi.');
         return res.redirect('/#pricing');
@@ -65,7 +63,6 @@ exports.applyVoucher = async (req, res) => {
         order.voucher_code = null;
         req.flash('error_msg', error.message);
     }
-    // Perbaikan: Selalu redirect kembali ke /checkout, bukan ke halaman lain.
     res.redirect('/checkout');
 };
 
@@ -86,10 +83,7 @@ exports.processPayment = async (req, res) => {
         };
 
         const transaction = await snap.createTransaction(parameter);
-        const transactionToken = transaction.token;
-
-        logger.info('MIDTRANS: Transaksi dibuat, token:', transactionToken);
-        res.json({ token: transactionToken });
+        res.json({ token: transaction.token });
     } catch (error) {
         logger.error('MIDTRANS: Gagal memproses pembayaran', { message: error.message });
         res.status(500).json({ error: error.message });
