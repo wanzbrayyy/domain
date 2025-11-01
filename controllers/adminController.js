@@ -7,6 +7,38 @@ const Product = require('../models/product');
 const Setting = require('../models/setting');
 const logger = require('../utils/logger');
 
+exports.updatePriceSettings = async (req, res) => {
+    try {
+        const { tld, price, ssl_prices, whois_price, remove_tld } = req.body;
+
+        if (remove_tld) {
+            await Setting.updateOne({ key: 'tld_prices' }, { $unset: { [`value.${remove_tld}`]: "" } });
+        } else if (tld && price) {
+            await Setting.updateOne({ key: 'tld_prices' }, { $set: { [`value.${tld.replace('.', '')}`]: Number(price) } }, { upsert: true });
+        } else if (ssl_prices) {
+            const pricesToUpdate = {};
+            for (const [name, price] of Object.entries(ssl_prices)) {
+                if (price && Number(price) > 0) {
+                    pricesToUpdate[`value.${name}`] = Number(price);
+                } else {
+                    await Setting.updateOne({ key: 'ssl_prices' }, { $unset: { [`value.${name}`]: "" } });
+                }
+            }
+            if(Object.keys(pricesToUpdate).length > 0) {
+                await Setting.updateOne({ key: 'ssl_prices' }, { $set: pricesToUpdate }, { upsert: true });
+            }
+        } else if (whois_price) {
+            await Setting.updateOne({ key: 'whois_price' }, { $set: { value: Number(whois_price) } }, { upsert: true });
+        }
+        
+        req.flash('success_msg', 'Pengaturan harga berhasil diperbarui.');
+    } catch (error) {
+        logger.error("Failed to update price settings", { message: error.message });
+        req.flash('error_msg', 'Gagal memperbarui harga.');
+    }
+    res.redirect('/admin/settings-harga');
+};
+
 exports.getAdminDashboard = async (req, res) => {
     try {
         const userCount = await User.countDocuments();
@@ -19,7 +51,6 @@ exports.getAdminDashboard = async (req, res) => {
         res.status(500).render('admin/error', { message: "Gagal memuat dashboard admin." });
     }
 };
-
 exports.getProductsPage = async (req, res) => {
     try {
         const products = await Product.find().sort({ createdAt: -1 });
@@ -30,7 +61,6 @@ exports.getProductsPage = async (req, res) => {
         res.status(500).render('admin/error', { message: "Gagal memuat halaman produk." });
     }
 };
-
 exports.createProduct = async (req, res) => {
     try {
         const { category, name, description, price, price_unit, icon, isFeatured, features } = req.body;
@@ -45,7 +75,6 @@ exports.createProduct = async (req, res) => {
     }
     res.redirect('/admin/products');
 };
-
 exports.deleteProduct = async (req, res) => {
     try {
         await Product.findByIdAndDelete(req.params.id);
@@ -55,13 +84,12 @@ exports.deleteProduct = async (req, res) => {
     }
     res.redirect('/admin/products');
 };
-
 exports.getPriceSettingsPage = async (req, res) => {
     try {
         const tldPrices = await Setting.findOne({ key: 'tld_prices' });
         const sslPrices = await Setting.findOne({ key: 'ssl_prices' });
         const whoisPrice = await Setting.findOne({ key: 'whois_price' });
-        const { data: sslApiProducts } = await apiService.listSslProducts();
+        const { data: sslApiProducts } = await apiService.listSslProducts({ limit: 100 });
         
         res.render('admin/settings-harga', {
             title: 'Pengaturan Harga', user: req.session.user,
@@ -74,27 +102,6 @@ exports.getPriceSettingsPage = async (req, res) => {
         res.status(500).render('admin/error', { message: "Gagal memuat pengaturan harga." });
     }
 };
-
-exports.updatePriceSettings = async (req, res) => {
-    try {
-        const { tld, price, ssl_name, ssl_price, whois_price, remove_tld } = req.body;
-
-        if (remove_tld) {
-             await Setting.updateOne({ key: 'tld_prices' }, { $unset: { [`value.${remove_tld}`]: "" } });
-        } else if (tld && price) {
-            await Setting.updateOne({ key: 'tld_prices' }, { $set: { [`value.${tld.replace('.', '')}`]: Number(price) } }, { upsert: true });
-        } else if (ssl_name && ssl_price) {
-             await Setting.updateOne({ key: 'ssl_prices' }, { $set: { [`value.${ssl_name}`]: Number(ssl_price) } }, { upsert: true });
-        } else if (whois_price) {
-            await Setting.updateOne({ key: 'whois_price' }, { $set: { value: Number(whois_price) } }, { upsert: true });
-        }
-        req.flash('success_msg', 'Pengaturan harga berhasil diperbarui.');
-    } catch (error) {
-        req.flash('error_msg', 'Gagal memperbarui harga.');
-    }
-    res.redirect('/admin/settings-harga');
-};
-
 exports.getDomainsPage = async (req, res) => {
     try {
         const { data: domains } = await apiService.listDomains({ limit: 20, 'f_params[orderBy][field]': 'created_at', 'f_params[orderBy][type]': 'desc' });
