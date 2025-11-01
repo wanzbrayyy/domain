@@ -1,0 +1,39 @@
+<%- include('partials/header') %>
+<h1>Beli Sertifikat SSL</h1>
+<p>Amankan website Anda dan tingkatkan kepercayaan pengunjung dengan enkripsi SSL.</p>
+
+<div class="table-wrapper card">
+    <table>
+        <thead>
+            <tr>
+                <th>Nama Produk</th>
+                <th>Tipe</th>
+                <th>Fitur</th>
+                <th>Harga/Tahun</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% sslProducts.forEach(product => { %>
+                <tr>
+                    <td><strong><%= product.name %></strong><br><small><%= product.brand %></small></td>
+                    <td><%= product.ssl_type %> <%= product.is_wildcard ? 'Wildcard' : '' %></td>
+                    <td><%= product.features.domain %></td>
+                    <td>
+                        <% if (product.price) { %>
+                            <strong>Rp <%= product.price.toLocaleString('id-ID') %></strong>
+                        <% } else { %>
+                            <span style="color: var(--nexus-text-gray);">Hubungi Sales</span>
+                        <% } %>
+                    </td>
+                    <td>
+                        <a href="#" class="btn btn-primary <%= !product.price ? 'disabled' : '' %>">Pesan</a>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</div>
+
+<style>.btn.disabled { pointer-events: none; background: #ccc; }</style>
+<%- include('partials/footer') %>
