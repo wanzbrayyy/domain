@@ -1,29 +1,32 @@
-<%- include('../partials/header', { title: title || 'Admin Dashboard', currentPath: '/admin' }) %>
-
-<style>
-    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
-</style>
+<%- include('../partials/header', { title: title || 'Admin Dashboard' }) %>
 
 <h1>Admin Dashboard</h1>
 <p>Selamat datang, <%= user.name %>. Di sini Anda dapat mengelola aspek penting dari situs Anda.</p>
 
-<div class="stat-grid" style="margin-top: 2rem;">
-    <div class="card">
-        <h3><%= typeof userCount !== 'undefined' ? userCount : '0' %></h3>
-        <p>Total Pengguna</p>
+<div class="grid-2" style="margin-top: 2rem;">
+    <div class="card" style="display: flex; align-items: center; gap: 1.5rem;">
+        <i class="fas fa-users" style="font-size: 2.5rem; color: var(--nexus-primary);"></i>
+        <div>
+            <h3 style="font-size: 2rem; margin: 0;"><%= typeof userCount !== 'undefined' ? userCount : '0' %></h3>
+            <p style="margin: 0; color: var(--nexus-text-gray);">Total Pengguna</p>
+        </div>
     </div>
-    <div class="card">
-        <h3><%= typeof domainCount !== 'undefined' ? domainCount : '0' %></h3>
-        <p>Total Domain</p>
+    <div class="card" style="display: flex; align-items: center; gap: 1.5rem;">
+        <i class="fas fa-globe" style="font-size: 2.5rem; color: var(--nexus-primary);"></i>
+        <div>
+            <h3 style="font-size: 2rem; margin: 0;"><%= typeof domainCount !== 'undefined' ? domainCount : '0' %></h3>
+            <p style="margin: 0; color: var(--nexus-text-gray);">Total Domain</p>
+        </div>
     </div>
 </div>
 
 <div class="card" style="margin-top: 2rem;">
     <h2>Tindakan Cepat</h2>
-    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+    <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem;">
         <a href="/admin/domains" class="btn btn-primary">Kelola Domain</a>
         <a href="/admin/vouchers" class="btn btn-primary">Kelola Voucher</a>
         <a href="/admin/promos" class="btn btn-primary">Kelola Promo</a>
+        <a href="/admin/notifications" class="btn btn-primary">Kirim Notifikasi</a>
     </div>
 </div>
 

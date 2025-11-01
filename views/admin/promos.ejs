@@ -1,4 +1,4 @@
-<%- include('../partials/header', { title: title || 'Kelola Promo' }) %>
+<%- include('../partials/header', { title: 'Kelola Promo' }) %>
 
 <h1>Kelola Promo Halaman Depan</h1>
 <p>Hanya satu promo yang bisa aktif dalam satu waktu. Membuat promo baru akan menonaktifkan yang lama secara otomatis.</p>
@@ -6,39 +6,39 @@
 <div class="card">
     <h3>Buat Promo Baru</h3>
     <form action="/admin/promos/create" method="POST" style="margin-top: 1rem;">
-        <div class="form-group" style="margin-bottom: 1rem;">
-            <label for="title" style="display: block; margin-bottom: 0.5rem;">Judul Promo</label>
-            <input type="text" id="title" name="title" class="form-control" style="width: 100%; padding: 0.75rem;" required>
+        <div class="form-group">
+            <label for="title">Judul Promo</label>
+            <input type="text" id="title" name="title" class="form-control" required>
         </div>
-        <div class="form-group" style="margin-bottom: 1rem;">
-            <label for="message" style="display: block; margin-bottom: 0.5rem;">Pesan/Deskripsi Promo</label>
-            <textarea id="message" name="message" class="form-control" style="width: 100%; padding: 0.75rem;" required></textarea>
+        <div class="form-group">
+            <label for="message">Pesan/Deskripsi Promo</label>
+            <textarea id="message" name="message" class="form-control" required></textarea>
         </div>
-        <div class="form-group" style="margin-bottom: 1rem;">
-            <label for="link" style="display: block; margin-bottom: 0.5rem;">Link Tombol (opsional)</label>
-            <input type="text" id="link" name="link" class="form-control" style="width: 100%; padding: 0.75rem;" placeholder="Contoh: /#pricing">
+        <div class="form-group">
+            <label for="link">Link Tombol (opsional)</label>
+            <input type="text" id="link" name="link" class="form-control" placeholder="Contoh: /#pricing">
         </div>
         <button type="submit" class="btn btn-primary">Simpan dan Aktifkan Promo</button>
     </form>
 </div>
 <div class="card">
     <h3>Promo Tersimpan</h3>
-    <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+    <div class="table-wrapper">
+        <table>
             <thead>
                 <tr>
-                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #eee;">Judul</th>
-                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #eee;">Status</th>
-                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #eee;">Aksi</th>
+                    <th>Judul</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 <% if (promos && promos.length > 0) { %>
                     <% promos.forEach(promo => { %>
                     <tr>
-                        <td style="padding: 12px; border-bottom: 1px solid #eee;"><%= promo.title %></td>
-                        <td style="padding: 12px; border-bottom: 1px solid #eee;"><%= promo.isActive ? 'Aktif' : 'Nonaktif' %></td>
-                        <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                        <td><%= promo.title %></td>
+                        <td><%= promo.isActive ? 'Aktif' : 'Nonaktif' %></td>
+                        <td>
                             <form action="/admin/promos/<%= promo.id %>/delete" method="POST" onsubmit="return confirm('Yakin ingin menghapus promo ini?');">
                                 <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
                             </form>

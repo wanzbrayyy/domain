@@ -1,10 +1,10 @@
 <%- include('../partials/header', { title: 'Terjadi Kesalahan' }) %>
 
-<div class="card" style="background-color: #f8d7da; border-color: #f5c6cb;">
-    <h1 style="color: #721c24;">Terjadi Kesalahan pada Server</h1>
+<div class="alert alert-danger">
+    <h1>Terjadi Kesalahan pada Server</h1>
     <p>Maaf, permintaan Anda tidak dapat diproses saat ini. Tim kami telah diberitahu tentang masalah ini.</p>
     <p><strong>Detail Teknis:</strong> <%= message %></p>
-    <a href="/admin" class="btn btn-danger">Kembali ke Dashboard Admin</a>
+    <a href="/admin" class="btn btn-danger" style="margin-top: 1rem;">Kembali ke Dashboard Admin</a>
 </div>
 
 <%- include('../partials/footer') %>
