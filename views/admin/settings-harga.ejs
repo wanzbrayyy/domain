@@ -1,7 +1,6 @@
 <%- include('../partials/header') %>
 <h1>Pengaturan Harga</h1>
 <p>Atur harga dinamis untuk ekstensi domain, proteksi WHOIS, dan produk SSL.</p>
-
 <div class="grid-2">
     <div class="card">
         <h2>Harga Proteksi WHOIS</h2>
@@ -13,7 +12,6 @@
             <button type="submit" class="btn btn-primary">Update Harga WHOIS</button>
         </form>
     </div>
-
     <div class="card">
         <h2>Harga TLD Domain</h2>
         <form action="/admin/settings-harga/update" method="POST" style="display: flex; gap: 1rem; align-items: flex-end;">
@@ -25,7 +23,7 @@
                 <label>Harga (cth: 150000)</label>
                 <input type="number" name="price" class="form-control" placeholder="150000" required>
             </div>
-            <button type="submit" class="btn btn-primary">Tambah/Update</button>
+            <button type="submit" class="btn btn-primary">Update</button>
         </form>
         <hr>
         <h4>Harga Saat Ini:</h4>
@@ -35,39 +33,36 @@
                 <strong>Rp <%= price.toLocaleString('id-ID') %></strong>
                 <form action="/admin/settings-harga/update" method="POST">
                     <input type="hidden" name="remove_tld" value="<%= tld %>">
-                    <button type="submit" class="btn btn-danger btn-sm" style="padding: 5px 10px;">&times;</button>
+                    <button type="submit" class="btn btn-danger btn-sm">&times;</button>
                 </form>
             </div>
         <% }) %>
     </div>
 </div>
-
 <div class="card">
-    <h2>Harga Override SSL</h2>
-    <p>Harga ini akan menimpa harga default dari API. Kosongkan jika ingin menggunakan harga API.</p>
+    <h2>Harga Override SSL (Lengkap)</h2>
+    <p>Isi harga custom untuk produk SSL. Kosongkan untuk menggunakan harga default API (jika ada).</p>
     <form action="/admin/settings-harga/update" method="POST">
-        <div class="form-group">
-            <label>Pilih Produk SSL</label>
-            <select name="ssl_name" class="form-control">
-                <% sslApiProducts.forEach(product => { %>
-                    <option value="<%= product.name %>"><%= product.name %></option>
-                <% }) %>
-            </select>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th>Nama Produk SSL</th><th>Harga Custom</th></tr>
+                </thead>
+                <tbody>
+                    <% sslApiProducts.forEach(product => { %>
+                        <tr>
+                            <td><%= product.name %></td>
+                            <td>
+                                <div class="form-group" style="margin:0;">
+                                    <input type="number" name="ssl_prices[<%= product.name %>]" class="form-control" placeholder="cth: 80000" value="<%= sslPrices[product.name] || '' %>">
+                                </div>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
         </div>
-        <div class="form-group">
-            <label>Harga Custom (angka saja)</label>
-            <input type="number" name="ssl_price" class="form-control" placeholder="80000">
-        </div>
-        <button type="submit" class="btn btn-primary">Update Harga SSL</button>
+        <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Simpan Semua Harga SSL</button>
     </form>
-     <hr>
-    <h4>Harga Custom Saat Ini:</h4>
-     <% Object.entries(sslPrices).forEach(([name, price]) => { %>
-            <div style="display: flex; justify-content: space-between; padding: 5px 0;">
-                <span><%= name %></span>
-                <strong>Rp <%= price.toLocaleString('id-ID') %></strong>
-            </div>
-        <% }) %>
 </div>
-
 <%- include('../partials/footer') %>
