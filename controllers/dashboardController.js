@@ -5,120 +5,15 @@ const logger = require('../utils/logger');
 
 const domainPrices = {
     'com': 150000, 'id': 250000, 'co.id': 120000, 'net': 160000,
-    'org': 165000, 'xyz': 30000, 'default': 175000
+    'org': 165000, 'xyz': 30000, 'site': 45000, 'default': 175000
 };
+const WHOIS_PROTECTION_PRICE = 50000;
 
 const snap = new midtransClient.Snap({
     isProduction: true,
     serverKey: process.env.MIDTRANS_SERVER_KEY,
     clientKey: process.env.MIDTRANS_CLIENT_KEY
 });
-
-exports.getDashboard = async (req, res) => {
-    try {
-        const localUser = await User.findById(req.session.user.id).lean();
-        req.session.user = { ...req.session.user, ...localUser };
-
-        const customerId = req.session.user.customerId;
-        const { data: domains } = await apiService.listDomains({ customer_id: customerId });
-        
-        res.render('dashboard/index', {
-            user: req.session.user,
-            domains: domains || [],
-            title: 'Dashboard'
-        });
-    } catch (error) {
-        req.flash('error_msg', 'Gagal memuat data dashboard.');
-        res.redirect('/');
-    }
-};
-
-exports.getBuyDomainPage = (req, res) => {
-    res.render('dashboard/buy-domain', { user: req.session.user, title: 'Beli Domain Baru' });
-};
-
-exports.getTransferDomainPage = (req, res) => {
-    res.render('dashboard/transfer-domain', { title: 'Transfer Domain', user: req.session.user });
-};
-
-exports.getSettingsPage = async (req, res) => {
-    try {
-        const localUser = await User.findById(req.session.user.id).lean();
-        if (!localUser) {
-            req.flash('error_msg', 'Sesi pengguna tidak valid.');
-            return res.redirect('/login');
-        }
-
-        const { data: apiCustomer } = await apiService.showCustomer(req.session.user.customerId);
-        if (!apiCustomer) {
-            throw new Error("Data pelanggan tidak ditemukan dari API.");
-        }
-        
-        const user = { ...apiCustomer, ...localUser };
-
-        res.render('dashboard/settings', {
-            user: user,
-            title: 'Pengaturan Akun'
-        });
-    } catch (error) {
-        req.flash('error_msg', `Gagal memuat data pengaturan: ${error.message}`);
-        res.redirect('/dashboard');
-    }
-};
-
-exports.updateUserSettings = async (req, res) => {
-    try {
-        const { name, email, organization, street_1, city, state, postal_code, voice } = req.body;
-        
-        const localUpdateData = { name, email };
-        if (req.file) {
-            localUpdateData.profilePicture = req.file.path;
-        }
-
-        const updatedUser = await User.findByIdAndUpdate(req.session.user.id, localUpdateData, { new: true });
-
-        const { data: currentApiCustomer } = await apiService.showCustomer(req.session.user.customerId);
-
-        const apiUpdateData = {
-            ...currentApiCustomer,
-            name, email, organization, street_1, city, state, postal_code, voice
-        };
-
-        await apiService.updateCustomer(req.session.user.customerId, apiUpdateData);
-        
-        req.session.user = {
-            id: updatedUser._id,
-            name: updatedUser.name,
-            email: updatedUser.email,
-            customerId: updatedUser.customerId,
-            role: updatedUser.role,
-            profilePicture: updatedUser.profilePicture
-        };
-
-        req.flash('success_msg', 'Informasi akun berhasil diperbarui.');
-        res.redirect('/dashboard/settings');
-    } catch (error) {
-        logger.error('Gagal memperbarui pengaturan pengguna', { message: error.message });
-        req.flash('error_msg', `Gagal memperbarui akun: ${error.message}`);
-        res.redirect('/dashboard/settings');
-    }
-};
-
-exports.getDomainManagementPage = async (req, res) => {
-    try {
-        const { domainId } = req.params;
-        const domainDetails = await apiService.showDomainById(domainId);
-        if (domainDetails.customer_id !== req.session.user.customerId) {
-            return res.status(403).send("Akses ditolak.");
-        }
-        res.render('dashboard/manage-domain', {
-            domain: domainDetails, user: req.session.user, title: `Kelola ${domainDetails.name}`
-        });
-    } catch (error) {
-        req.flash('error_msg', `Gagal memuat detail domain: ${error.message}`);
-        res.redirect('/dashboard');
-    }
-};
 
 exports.getConfirmRegistrationPage = (req, res) => {
     const { domain } = req.query;
@@ -128,13 +23,148 @@ exports.getConfirmRegistrationPage = (req, res) => {
     }
     const tld = domain.split('.').pop();
     const price = domainPrices[tld] || domainPrices['default'];
-    req.session.domain_order = { domain, price, period: 1 };
+    
+    req.session.domain_order = {
+        domain: domain,
+        base_price: price
+    };
+
     res.render('dashboard/confirm-registration', {
-        title: 'Konfirmasi Pesanan', user: req.session.user,
-        order: req.session.domain_order, clientKey: process.env.MIDTRANS_CLIENT_KEY
+        title: 'Konfirmasi Pesanan',
+        user: req.session.user,
+        order: { domain, price },
+        whoisPrice: WHOIS_PROTECTION_PRICE,
+        clientKey: process.env.MIDTRANS_CLIENT_KEY
     });
 };
 
+exports.processDomainPayment = async (req, res) => {
+    try {
+        const { period, buy_whois_protection } = req.body;
+        const order = req.session.domain_order;
+        const user = req.session.user;
+
+        if (!order || !user) throw new Error('Sesi pesanan domain tidak valid. Silakan ulangi.');
+
+        const domainPriceTotal = order.base_price * period;
+        const whoisPriceTotal = buy_whois_protection ? WHOIS_PROTECTION_PRICE : 0;
+        const finalAmount = domainPriceTotal + whoisPriceTotal;
+        
+        order.period = period;
+        order.buy_whois_protection = buy_whois_protection;
+        order.final_price = finalAmount;
+        
+        const orderId = `DOM-${user.id.slice(-4)}-${Date.now()}`;
+        const parameter = {
+            "transaction_details": { "order_id": orderId, "gross_amount": finalAmount },
+            "item_details": [
+                { "id": order.domain, "price": domainPriceTotal, "quantity": 1, "name": `Registrasi Domain ${order.domain} (${period} Tahun)` },
+                ...(buy_whois_protection ? [{ "id": "WHOIS", "price": whoisPriceTotal, "quantity": 1, "name": "Proteksi WHOIS" }] : [])
+            ],
+            "customer_details": { "first_name": user.name, "email": user.email }
+        };
+        const transaction = await snap.createTransaction(parameter);
+        res.json({ token: transaction.token });
+    } catch (error) {
+        logger.error('MIDTRANS: Gagal memproses pembayaran domain', { message: error.message });
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.handleSuccessfulDomainRegistration = async (req, res) => {
+    try {
+        const order = req.session.domain_order;
+        const user = req.session.user;
+        if (!order || !user) throw new Error('Sesi untuk finalisasi tidak ditemukan.');
+        
+        const registrationData = {
+            name: order.domain,
+            period: order.period,
+            customer_id: user.customerId,
+            buy_whois_protection: order.buy_whois_protection,
+            'nameserver[0]': 'ns1.digitalhostid.co.id',
+            'nameserver[1]': 'ns2.digitalhostid.co.id'
+        };
+
+        await apiService.registerDomain(registrationData);
+        
+        delete req.session.domain_order;
+        req.flash('success_msg', `Selamat! Domain ${order.domain} telah berhasil didaftarkan.`);
+        res.status(200).json({ message: 'OK' });
+    } catch (error) {
+        logger.error('FINALIZE: Gagal mendaftarkan domain setelah pembayaran', { message: error.message });
+        req.flash('error_msg', `Pembayaran berhasil, tetapi error saat mendaftarkan domain: ${error.message}. Hubungi support.`);
+        res.status(500).json({ error: 'Gagal finalisasi' });
+    }
+};
+
+exports.getDashboard = async (req, res) => {
+    try {
+        const localUser = await User.findById(req.session.user.id).lean();
+        req.session.user = { ...req.session.user, ...localUser };
+        const customerId = req.session.user.customerId;
+        const { data: domains } = await apiService.listDomains({ customer_id: customerId });
+        res.render('dashboard/index', {
+            user: req.session.user, domains: domains || [], title: 'Dashboard'
+        });
+    } catch (error) {
+        req.flash('error_msg', 'Gagal memuat data dashboard.');
+        res.redirect('/');
+    }
+};
+exports.getBuyDomainPage = (req, res) => {
+    res.render('dashboard/buy-domain', { user: req.session.user, title: 'Beli Domain Baru' });
+};
+exports.getTransferDomainPage = (req, res) => {
+    res.render('dashboard/transfer-domain', { title: 'Transfer Domain', user: req.session.user });
+};
+exports.getSettingsPage = async (req, res) => {
+    try {
+        const localUser = await User.findById(req.session.user.id).lean();
+        if (!localUser) {
+            req.flash('error_msg', 'Sesi pengguna tidak valid.');
+            return res.redirect('/login');
+        }
+        const { data: apiCustomer } = await apiService.showCustomer(req.session.user.customerId);
+        if (!apiCustomer) {
+            throw new Error("Data pelanggan tidak ditemukan dari API.");
+        }
+        const user = { ...apiCustomer, ...localUser };
+        res.render('dashboard/settings', { user: user, title: 'Pengaturan Akun' });
+    } catch (error) {
+        req.flash('error_msg', `Gagal memuat data pengaturan: ${error.message}`);
+        res.redirect('/dashboard');
+    }
+};
+exports.updateUserSettings = async (req, res) => {
+    try {
+        const { name, email, organization, street_1, city, state, postal_code, voice } = req.body;
+        const localUpdateData = { name, email };
+        if (req.file) { localUpdateData.profilePicture = req.file.path; }
+        const updatedUser = await User.findByIdAndUpdate(req.session.user.id, localUpdateData, { new: true });
+        const { data: currentApiCustomer } = await apiService.showCustomer(req.session.user.customerId);
+        const apiUpdateData = { ...currentApiCustomer, name, email, organization, street_1, city, state, postal_code, voice };
+        await apiService.updateCustomer(req.session.user.customerId, apiUpdateData);
+        req.session.user = { id: updatedUser._id, name: updatedUser.name, email: updatedUser.email, customerId: updatedUser.customerId, role: updatedUser.role, profilePicture: updatedUser.profilePicture };
+        req.flash('success_msg', 'Informasi akun berhasil diperbarui.');
+        res.redirect('/dashboard/settings');
+    } catch (error) {
+        logger.error('Gagal memperbarui pengaturan pengguna', { message: error.message });
+        req.flash('error_msg', `Gagal memperbarui akun: ${error.message}`);
+        res.redirect('/dashboard/settings');
+    }
+};
+exports.getDomainManagementPage = async (req, res) => {
+    try {
+        const { domainId } = req.params;
+        const domainDetails = await apiService.showDomainById(domainId);
+        if (domainDetails.customer_id !== req.session.user.customerId) { return res.status(403).send("Akses ditolak."); }
+        res.render('dashboard/manage-domain', { domain: domainDetails, user: req.session.user, title: `Kelola ${domainDetails.name}` });
+    } catch (error) {
+        req.flash('error_msg', `Gagal memuat detail domain: ${error.message}`);
+        res.redirect('/dashboard');
+    }
+};
 exports.handleTransferDomain = async (req, res) => {
     const { name, auth_code } = req.body;
     try {
@@ -147,7 +177,6 @@ exports.handleTransferDomain = async (req, res) => {
         res.redirect('/dashboard/transfer-domain');
     }
 };
-
 exports.resendVerification = async (req, res) => {
     const { domainId } = req.params;
     try {
@@ -159,7 +188,6 @@ exports.resendVerification = async (req, res) => {
         res.redirect(`/dashboard/domain/${domainId}/manage`);
     }
 };
-
 exports.toggleLockStatus = async (req, res) => {
     const { domainId } = req.params;
     try {
@@ -177,48 +205,6 @@ exports.toggleLockStatus = async (req, res) => {
         res.redirect(`/dashboard/domain/${domainId}/manage`);
     }
 };
-
-exports.processDomainPayment = async (req, res) => {
-    try {
-        const order = req.session.domain_order;
-        const user = req.session.user;
-        if (!order || !user) throw new Error('Sesi pesanan domain tidak valid. Silakan ulangi.');
-        const orderId = `DOM-${user.id.slice(-4)}-${Date.now()}`;
-        const parameter = {
-            "transaction_details": { "order_id": orderId, "gross_amount": order.price },
-            "item_details": [{
-                "id": order.domain, "price": order.price, "quantity": 1,
-                "name": `Registrasi Domain ${order.domain} (1 Tahun)`
-            }],
-            "customer_details": { "first_name": user.name, "email": user.email }
-        };
-        const transaction = await snap.createTransaction(parameter);
-        res.json({ token: transaction.token });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};
-
-exports.handleSuccessfulDomainRegistration = async (req, res) => {
-    try {
-        const order = req.session.domain_order;
-        const user = req.session.user;
-        if (!order || !user) throw new Error('Sesi untuk finalisasi tidak ditemukan.');
-        const registrationData = {
-            name: order.domain, period: order.period, customer_id: user.customerId,
-            'nameserver[0]': 'ns1.digitalhostid.co.id', 'nameserver[1]': 'ns2.digitalhostid.co.id',
-            'nameserver[2]': 'ns3.digitalhostid.co.id', 'nameserver[3]': 'ns4.digitalhostid.co.id'
-        };
-        await apiService.registerDomain(registrationData);
-        delete req.session.domain_order;
-        req.flash('success_msg', `Selamat! Domain ${order.domain} telah berhasil didaftarkan.`);
-        res.status(200).json({ message: 'OK' });
-    } catch (error) {
-        req.flash('error_msg', `Pembayaran berhasil, tetapi error saat mendaftarkan domain: ${error.message}. Hubungi support.`);
-        res.status(500).json({ error: 'Gagal finalisasi' });
-    }
-};
-
 exports.getDnsManagerPage = async (req, res) => {
     const { domainId } = req.params;
     try {
@@ -234,7 +220,6 @@ exports.getDnsManagerPage = async (req, res) => {
         res.redirect(`/dashboard/domain/${domainId}/manage`);
     }
 };
-
 exports.createDnsRecord = async (req, res) => {
     const { domainId } = req.params;
     try {
@@ -247,7 +232,6 @@ exports.createDnsRecord = async (req, res) => {
     }
     res.redirect(`/dashboard/domain/${domainId}/dns`);
 };
-
 exports.deleteDnsRecord = async (req, res) => {
     const { domainId } = req.params;
     try {
