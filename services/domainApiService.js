@@ -1,4 +1,3 @@
-// services/domainApiService.js
 const axios = require('axios');
 const logger = require('../utils/logger');
 
@@ -21,10 +20,12 @@ const handleApiError = (error, functionName) => {
     if (error.code === 'ECONNABORTED') {
         throw new Error('API tidak merespons (timeout). Coba lagi nanti.');
     }
-    throw new Error(error.response?.data?.message || 'Terjadi kesalahan pada server API.');
+    const apiErrorMessage = error.response?.data?.errors 
+        ? Object.values(error.response.data.errors).flat().join(' ') 
+        : error.response?.data?.message;
+    throw new Error(apiErrorMessage || 'Terjadi kesalahan pada server API.');
 };
 
-// --- FUNGSI CUSTOMER ---
 const createCustomer = async (customerData) => {
     try {
         const response = await apiClient.post('/customers', customerData);
@@ -46,8 +47,6 @@ const updateCustomer = async (customerId, customerData) => {
     } catch (error) { handleApiError(error, 'updateCustomer'); }
 };
 
-
-// --- FUNGSI DOMAIN ---
 const listDomains = async (params = {}) => {
     try {
         const response = await apiClient.get('/domains', { params });
@@ -64,8 +63,17 @@ const registerDomain = async (domainData) => {
 
 const checkDomainAvailability = async (domain) => {
     try {
-        const response = await apiClient.get('/domains/availability', { params: { domain } });
-        return response.data;
+        const response = await apiClient.get('/domains/availability', { params: { domain, include_premium_domains: true } });
+        const result = response.data?.data?.[0];
+        if (!result) {
+            throw new Error('Respons API tidak valid');
+        }
+        return {
+            name: result.name,
+            status: result.available === 1 ? 'available' : 'taken',
+            is_premium: result.is_premium_name,
+            price: result.premium_registration_price
+        };
     } catch (error) { handleApiError(error, 'checkDomainAvailability'); }
 };
 
@@ -118,7 +126,6 @@ const unsuspendDomain = async (domainId) => {
     } catch (error) { handleApiError(error, 'unsuspendDomain'); }
 };
 
-// --- FUNGSI DNS ---
 const getDnsRecords = async (domainId) => {
     try {
         const response = await apiClient.get(`/domains/${domainId}/dns`);
@@ -141,20 +148,8 @@ const deleteDnsRecord = async (domainId, recordData) => {
 };
 
 module.exports = {
-    createCustomer,
-    showCustomer,
-    updateCustomer,
-    listDomains,
-    registerDomain,
-    checkDomainAvailability,
-    transferDomain,
-    showDomainById,
-    resendVerificationEmail,
-    lockDomain,
-    unlockDomain,
-    suspendDomain,
-    unsuspendDomain,
-    getDnsRecords,
-    createDnsRecord,
-    deleteDnsRecord
+    createCustomer, showCustomer, updateCustomer, listDomains, registerDomain,
+    checkDomainAvailability, transferDomain, showDomainById, resendVerificationEmail,
+    lockDomain, unlockDomain, suspendDomain, unsuspendDomain, getDnsRecords,
+    createDnsRecord, deleteDnsRecord
 };
