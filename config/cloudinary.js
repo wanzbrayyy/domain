@@ -1,4 +1,3 @@
-
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
@@ -13,7 +12,7 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'digitalhost_profiles',
-    format: async (req, file) => 'png', 
+    format: async (req, file) => 'png',
     public_id: (req, file) => `user-${req.user.id}`,
     transformation: [{ width: 250, height: 250, crop: 'limit' }]
   }
