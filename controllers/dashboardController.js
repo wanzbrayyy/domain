@@ -16,8 +16,12 @@ const snap = new midtransClient.Snap({
 
 exports.getDashboard = async (req, res) => {
     try {
+        const localUser = await User.findById(req.session.user.id).lean();
+        req.session.user = { ...req.session.user, ...localUser };
+
         const customerId = req.session.user.customerId;
         const { data: domains } = await apiService.listDomains({ customer_id: customerId });
+        
         res.render('dashboard/index', {
             user: req.session.user,
             domains: domains || [],
@@ -71,7 +75,7 @@ exports.updateUserSettings = async (req, res) => {
             localUpdateData.profilePicture = req.file.path;
         }
 
-        await User.findByIdAndUpdate(req.session.user.id, localUpdateData);
+        const updatedUser = await User.findByIdAndUpdate(req.session.user.id, localUpdateData, { new: true });
 
         const { data: currentApiCustomer } = await apiService.showCustomer(req.session.user.customerId);
 
@@ -82,11 +86,14 @@ exports.updateUserSettings = async (req, res) => {
 
         await apiService.updateCustomer(req.session.user.customerId, apiUpdateData);
         
-        req.session.user.name = name;
-        req.session.user.email = email;
-        if(req.file) {
-            req.session.user.profilePicture = req.file.path;
-        }
+        req.session.user = {
+            id: updatedUser._id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            customerId: updatedUser.customerId,
+            role: updatedUser.role,
+            profilePicture: updatedUser.profilePicture
+        };
 
         req.flash('success_msg', 'Informasi akun berhasil diperbarui.');
         res.redirect('/dashboard/settings');
@@ -130,14 +137,12 @@ exports.getConfirmRegistrationPage = (req, res) => {
 
 exports.handleTransferDomain = async (req, res) => {
     const { name, auth_code } = req.body;
-    logger.info(`TRANSFER: Memulai proses transfer untuk domain: ${name}`);
     try {
         const transferData = { name, auth_code, period: 1, customer_id: req.session.user.customerId };
         await apiService.transferDomain(transferData);
         req.flash('success_msg', `Proses transfer untuk domain ${name} telah berhasil dimulai.`);
         res.redirect('/dashboard');
     } catch (error) {
-        logger.error(`TRANSFER: Gagal saat transfer domain: ${name}`, { message: error.message });
         req.flash('error_msg', `Gagal memulai transfer: ${error.message}`);
         res.redirect('/dashboard/transfer-domain');
     }
@@ -190,13 +195,11 @@ exports.processDomainPayment = async (req, res) => {
         const transaction = await snap.createTransaction(parameter);
         res.json({ token: transaction.token });
     } catch (error) {
-        logger.error('MIDTRANS: Gagal memproses pembayaran domain', { message: error.message });
         res.status(500).json({ error: error.message });
     }
 };
 
 exports.handleSuccessfulDomainRegistration = async (req, res) => {
-    logger.info('FINALIZE: Memulai finalisasi registrasi domain setelah pembayaran.');
     try {
         const order = req.session.domain_order;
         const user = req.session.user;
@@ -207,12 +210,10 @@ exports.handleSuccessfulDomainRegistration = async (req, res) => {
             'nameserver[2]': 'ns3.digitalhostid.co.id', 'nameserver[3]': 'ns4.digitalhostid.co.id'
         };
         await apiService.registerDomain(registrationData);
-        logger.info(`FINALIZE: Domain ${order.domain} berhasil didaftarkan untuk customer ID ${user.customerId}`);
         delete req.session.domain_order;
         req.flash('success_msg', `Selamat! Domain ${order.domain} telah berhasil didaftarkan.`);
         res.status(200).json({ message: 'OK' });
     } catch (error) {
-        logger.error('FINALIZE: Gagal mendaftarkan domain setelah pembayaran', { message: error.message });
         req.flash('error_msg', `Pembayaran berhasil, tetapi error saat mendaftarkan domain: ${error.message}. Hubungi support.`);
         res.status(500).json({ error: 'Gagal finalisasi' });
     }
