@@ -2,6 +2,7 @@ const apiService = require('../services/domainApiService');
 const logger = require('../utils/logger');
 const Promo = require('../models/promo');
 const Voucher = require('../models/voucher');
+const axios = require('axios'); // Pastikan axios diimpor
 
 const tldsToCheckDefault = ['.com', '.id', '.co.id', '.net', '.org', '.xyz'];
 
@@ -58,5 +59,23 @@ exports.checkDomain = async (req, res) => {
     } catch (error) {
         logger.error('Error besar di checkDomain', { message: error.message });
         res.status(500).json({ message: error.message || 'Terjadi kesalahan pada server.' });
+    }
+};
+
+// --- FUNGSI BARU UNTUK DIAGNOSTIK ---
+exports.checkServerIp = async (req, res) => {
+    try {
+        // Kita bertanya ke layanan luar "apa IP saya?"
+        const response = await axios.get('https://api.ipify.org?format=json');
+        const serverIp = response.data.ip;
+        res.status(200).json({
+            message: "Ini adalah Alamat IP server Anda. Tambahkan IP ini ke whitelist API domain Anda.",
+            ipAddress: serverIp
+        });
+    } catch (error) {
+        res.status(500).json({
+            error: "Gagal mendapatkan IP server.",
+            details: error.message
+        });
     }
 };
