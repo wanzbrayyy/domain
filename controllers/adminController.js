@@ -7,6 +7,86 @@ const Product = require('../models/product');
 const Setting = require('../models/setting');
 const logger = require('../utils/logger');
 
+exports.getAdminDashboard = async (req, res) => {
+    try {
+        const userCount = await User.countDocuments();
+        const domainsResponse = await apiService.listDomains({ limit: 1 });
+        const domainCount = domainsResponse?.meta?.total || 0;
+        res.render('admin/index', {
+            title: 'Admin Dashboard',
+            user: req.session.user,
+            userCount,
+            domainCount
+        });
+    } catch (error) {
+        res.status(500).render('admin/error', { message: "Gagal memuat dashboard admin." });
+    }
+};
+
+exports.getProductsPage = async (req, res) => {
+    try {
+        const products = await Product.find().sort({ createdAt: -1 });
+        res.render('admin/products', {
+            title: 'Kelola Produk',
+            user: req.session.user,
+            products
+        });
+    } catch (error) {
+        res.status(500).render('admin/error', { message: "Gagal memuat halaman produk." });
+    }
+};
+
+exports.createProduct = async (req, res) => {
+    try {
+        const { category, name, description, price, price_unit, icon, isFeatured, features } = req.body;
+        const featureList = features ? features.split(',').map(f => f.trim()) : [];
+        await Product.create({
+            category, name, description, price, price_unit, icon,
+            isFeatured: isFeatured === 'on',
+            features: featureList
+        });
+        req.flash('success_msg', 'Produk baru berhasil dibuat.');
+    } catch (error) {
+        logger.error("Gagal membuat produk", { message: error.message });
+        if (error.code === 11000) {
+            req.flash('error_msg', `Gagal membuat produk. Nama '${req.body.name}' sudah ada.`);
+        } else {
+            req.flash('error_msg', `Terjadi kesalahan: ${error.message}`);
+        }
+    }
+    res.redirect('/admin/products');
+};
+
+exports.deleteProduct = async (req, res) => {
+    try {
+        await Product.findByIdAndDelete(req.params.id);
+        req.flash('success_msg', 'Produk berhasil dihapus.');
+    } catch (error) {
+        req.flash('error_msg', 'Gagal menghapus produk.');
+    }
+    res.redirect('/admin/products');
+};
+
+exports.getPriceSettingsPage = async (req, res) => {
+    try {
+        const tldPrices = await Setting.findOne({ key: 'tld_prices' });
+        const sslPrices = await Setting.findOne({ key: 'ssl_prices' });
+        const whoisPrice = await Setting.findOne({ key: 'whois_price' });
+        const { data: sslApiProducts } = await apiService.listSslProducts({ limit: 100 });
+        
+        res.render('admin/settings-harga', {
+            title: 'Pengaturan Harga',
+            user: req.session.user,
+            tldPrices: tldPrices ? tldPrices.value : {},
+            sslPrices: sslPrices ? sslPrices.value : {},
+            whoisPrice: whoisPrice ? whoisPrice.value : 50000,
+            sslApiProducts: sslApiProducts || []
+        });
+    } catch (error) {
+        res.status(500).render('admin/error', { message: "Gagal memuat pengaturan harga." });
+    }
+};
+
 exports.updatePriceSettings = async (req, res) => {
     try {
         const { tld, price, ssl_prices, whois_price, remove_tld } = req.body;
@@ -39,69 +119,6 @@ exports.updatePriceSettings = async (req, res) => {
     res.redirect('/admin/settings-harga');
 };
 
-exports.getAdminDashboard = async (req, res) => {
-    try {
-        const userCount = await User.countDocuments();
-        const domainsResponse = await apiService.listDomains({ limit: 1 });
-        const domainCount = domainsResponse?.meta?.total || 0;
-        res.render('admin/index', {
-            title: 'Admin Dashboard', user: req.session.user, userCount, domainCount
-        });
-    } catch (error) {
-        res.status(500).render('admin/error', { message: "Gagal memuat dashboard admin." });
-    }
-};
-exports.getProductsPage = async (req, res) => {
-    try {
-        const products = await Product.find().sort({ createdAt: -1 });
-        res.render('admin/products', {
-            title: 'Kelola Produk', user: req.session.user, products
-        });
-    } catch (error) {
-        res.status(500).render('admin/error', { message: "Gagal memuat halaman produk." });
-    }
-};
-exports.createProduct = async (req, res) => {
-    try {
-        const { category, name, description, price, price_unit, icon, isFeatured, features } = req.body;
-        const featureList = features ? features.split(',').map(f => f.trim()) : [];
-        await Product.create({
-            category, name, description, price, price_unit, icon,
-            isFeatured: isFeatured === 'on', features: featureList
-        });
-        req.flash('success_msg', 'Produk berhasil dibuat.');
-    } catch (error) {
-        req.flash('error_msg', 'Gagal membuat produk. Nama mungkin sudah ada.');
-    }
-    res.redirect('/admin/products');
-};
-exports.deleteProduct = async (req, res) => {
-    try {
-        await Product.findByIdAndDelete(req.params.id);
-        req.flash('success_msg', 'Produk berhasil dihapus.');
-    } catch (error) {
-        req.flash('error_msg', 'Gagal menghapus produk.');
-    }
-    res.redirect('/admin/products');
-};
-exports.getPriceSettingsPage = async (req, res) => {
-    try {
-        const tldPrices = await Setting.findOne({ key: 'tld_prices' });
-        const sslPrices = await Setting.findOne({ key: 'ssl_prices' });
-        const whoisPrice = await Setting.findOne({ key: 'whois_price' });
-        const { data: sslApiProducts } = await apiService.listSslProducts({ limit: 100 });
-        
-        res.render('admin/settings-harga', {
-            title: 'Pengaturan Harga', user: req.session.user,
-            tldPrices: tldPrices ? tldPrices.value : {},
-            sslPrices: sslPrices ? sslPrices.value : {},
-            whoisPrice: whoisPrice ? whoisPrice.value : 50000,
-            sslApiProducts: sslApiProducts || []
-        });
-    } catch (error) {
-        res.status(500).render('admin/error', { message: "Gagal memuat pengaturan harga." });
-    }
-};
 exports.getDomainsPage = async (req, res) => {
     try {
         const { data: domains } = await apiService.listDomains({ limit: 20, 'f_params[orderBy][field]': 'created_at', 'f_params[orderBy][type]': 'desc' });
@@ -112,6 +129,7 @@ exports.getDomainsPage = async (req, res) => {
         res.status(500).render('admin/error', { message: "Gagal memuat daftar domain." });
     }
 };
+
 exports.handleSuspendDomain = async (req, res) => {
     const { domainId } = req.params;
     const { reason } = req.body;
@@ -127,6 +145,7 @@ exports.handleSuspendDomain = async (req, res) => {
     }
     res.redirect('/admin/domains');
 };
+
 exports.handleUnsuspendDomain = async (req, res) => {
     const { domainId } = req.params;
     try {
@@ -137,6 +156,7 @@ exports.handleUnsuspendDomain = async (req, res) => {
     }
     res.redirect('/admin/domains');
 };
+
 exports.getVouchersPage = async (req, res) => {
     try {
         const vouchers = await Voucher.find().sort({ createdAt: -1 });
@@ -147,6 +167,7 @@ exports.getVouchersPage = async (req, res) => {
         res.status(500).render('admin/error', { message: "Gagal memuat halaman voucher." });
     }
 };
+
 exports.createVoucher = async (req, res) => {
     try {
         const { code, discount, expiryDate } = req.body;
@@ -157,6 +178,7 @@ exports.createVoucher = async (req, res) => {
     }
     res.redirect('/admin/vouchers');
 };
+
 exports.getPromosPage = async (req, res) => {
     try {
         const promos = await Promo.find().sort({ createdAt: -1 });
@@ -165,6 +187,7 @@ exports.getPromosPage = async (req, res) => {
         res.status(500).render('admin/error', { message: "Gagal memuat halaman promo." });
     }
 };
+
 exports.createPromo = async (req, res) => {
     try {
         const { title, message, link } = req.body;
@@ -176,6 +199,7 @@ exports.createPromo = async (req, res) => {
     }
     res.redirect('/admin/promos');
 };
+
 exports.deletePromo = async (req, res) => {
     try {
         await Promo.findByIdAndDelete(req.params.id);
@@ -185,6 +209,7 @@ exports.deletePromo = async (req, res) => {
     }
     res.redirect('/admin/promos');
 };
+
 exports.getNotificationsPage = async (req, res) => {
     try {
         const users = await User.find({}, 'name email');
@@ -193,6 +218,7 @@ exports.getNotificationsPage = async (req, res) => {
         res.status(500).render('admin/error', { message: "Gagal memuat halaman notifikasi." });
     }
 };
+
 exports.sendNotification = async (req, res) => {
     try {
         const { userId, title, message, link } = req.body;

@@ -1,8 +1,8 @@
+const midtransClient = require('midtrans-client');
 const apiService = require('../services/domainApiService');
 const User = require('../models/user');
 const Setting = require('../models/setting');
 const logger = require('../utils/logger');
-const midtransClient = require('midtrans-client');
 
 const snap = new midtransClient.Snap({
     isProduction: true,
@@ -29,7 +29,7 @@ exports.getDashboard = async (req, res) => {
     }
 };
 
-exports.handleDomainOrderFlow = async (req, res) => {
+exports.handleDomainOrderFlow = (req, res) => {
     const { domain } = req.query;
     if (!domain) {
         req.flash('error_msg', 'Domain tidak valid.');
@@ -48,7 +48,7 @@ exports.handleDomainOrderFlow = async (req, res) => {
     if (req.session.user) {
         res.redirect('/checkout');
     } else {
-        res.redirect('/register');
+        res.redirect('/register?redirect=/checkout');
     }
 };
 
@@ -109,9 +109,11 @@ exports.handleSuccessfulDomainRegistration = async (req, res) => {
 exports.getBuyDomainPage = (req, res) => {
     res.render('dashboard/buy-domain', { user: req.session.user, title: 'Beli Domain Baru' });
 };
+
 exports.getTransferDomainPage = (req, res) => {
     res.render('dashboard/transfer-domain', { title: 'Transfer Domain', user: req.session.user });
 };
+
 exports.getSettingsPage = async (req, res) => {
     try {
         const localUser = await User.findById(req.session.user.id).lean();
@@ -130,6 +132,7 @@ exports.getSettingsPage = async (req, res) => {
         res.redirect('/dashboard');
     }
 };
+
 exports.updateUserSettings = async (req, res) => {
     try {
         const { name, email, organization, street_1, city, state, postal_code, voice } = req.body;
@@ -148,6 +151,7 @@ exports.updateUserSettings = async (req, res) => {
         res.redirect('/dashboard/settings');
     }
 };
+
 exports.getDomainManagementPage = async (req, res) => {
     try {
         const { domainId } = req.params;
@@ -159,9 +163,10 @@ exports.getDomainManagementPage = async (req, res) => {
         res.redirect('/dashboard');
     }
 };
+
 exports.handleTransferDomain = async (req, res) => {
-    const { name, auth_code } = req.body;
     try {
+        const { name, auth_code } = req.body;
         const transferData = { name, auth_code, period: 1, customer_id: req.session.user.customerId };
         await apiService.transferDomain(transferData);
         req.flash('success_msg', `Proses transfer untuk domain ${name} telah berhasil dimulai.`);
@@ -171,9 +176,10 @@ exports.handleTransferDomain = async (req, res) => {
         res.redirect('/dashboard/transfer-domain');
     }
 };
+
 exports.resendVerification = async (req, res) => {
-    const { domainId } = req.params;
     try {
+        const { domainId } = req.params;
         await apiService.resendVerificationEmail(domainId);
         req.flash('success_msg', 'Email verifikasi telah dikirim ulang.');
         res.redirect(`/dashboard/domain/${domainId}/manage`);
@@ -182,9 +188,10 @@ exports.resendVerification = async (req, res) => {
         res.redirect(`/dashboard/domain/${domainId}/manage`);
     }
 };
+
 exports.toggleLockStatus = async (req, res) => {
-    const { domainId } = req.params;
     try {
+        const { domainId } = req.params;
         const domain = await apiService.showDomainById(domainId);
         if (domain.is_locked) {
             await apiService.unlockDomain(domainId);
@@ -199,9 +206,10 @@ exports.toggleLockStatus = async (req, res) => {
         res.redirect(`/dashboard/domain/${domainId}/manage`);
     }
 };
+
 exports.getDnsManagerPage = async (req, res) => {
-    const { domainId } = req.params;
     try {
+        const { domainId } = req.params;
         const domainDetails = await apiService.showDomainById(domainId);
         if (domainDetails.customer_id !== req.session.user.customerId) return res.status(403).send("Akses ditolak.");
         const dnsData = await apiService.getDnsRecords(domainId);
@@ -214,9 +222,10 @@ exports.getDnsManagerPage = async (req, res) => {
         res.redirect(`/dashboard/domain/${domainId}/manage`);
     }
 };
+
 exports.createDnsRecord = async (req, res) => {
-    const { domainId } = req.params;
     try {
+        const { domainId } = req.params;
         const recordType = req.body.type === 'SPF' ? 'TXT' : req.body.type;
         const recordData = { type: recordType, name: req.body.name, content: req.body.content, ttl: req.body.ttl || 3600 };
         await apiService.createDnsRecord(domainId, recordData);
@@ -226,9 +235,10 @@ exports.createDnsRecord = async (req, res) => {
     }
     res.redirect(`/dashboard/domain/${domainId}/dns`);
 };
+
 exports.deleteDnsRecord = async (req, res) => {
-    const { domainId } = req.params;
     try {
+        const { domainId } = req.params;
         const recordData = { type: req.body.type, name: req.body.name, content: req.body.content };
         await apiService.deleteDnsRecord(domainId, recordData);
         req.flash('success_msg', 'DNS record berhasil dihapus.');
