@@ -1,5 +1,5 @@
-</main>
-
+</div>
+    
     <% if (user) { %>
     <nav class="bottom-nav">
         <a href="/dashboard" class="bottom-nav-item"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
@@ -14,6 +14,15 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // --- GLOBAL NAVIGATION SCRIPTS ---
+        const publicNavToggle = document.getElementById('public-nav-toggle');
+        const publicNavMenu = document.getElementById('public-nav-menu');
+        if (publicNavToggle) {
+            publicNavToggle.addEventListener('click', () => {
+                publicNavMenu.classList.toggle('show');
+            });
+        }
+        
         const profileAvatar = document.getElementById('profile-avatar-container');
         const profileDropdown = document.getElementById('profile-dropdown');
         if (profileAvatar) {
@@ -28,11 +37,12 @@
             }
         });
 
+        // --- AVATAR GENERATION SCRIPT ---
         function generateAvatar(name) {
             if (!name) return '';
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
-            const size = 64;
+            const size = 64; 
             canvas.width = size; canvas.height = size;
             
             const nameParts = name.trim().split(' ');
@@ -58,6 +68,7 @@
 
         document.querySelectorAll('.default-avatar-img').forEach(img => {
             const src = img.getAttribute('src');
+            // Check for empty, null, or 'undefined' string
             if (!src || src === 'undefined') {
                 const name = img.getAttribute('data-name');
                 if (name) img.src = generateAvatar(name);
