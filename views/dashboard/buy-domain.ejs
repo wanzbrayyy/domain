@@ -1,28 +1,21 @@
-<%- include('../partials/header', { title: 'Beli Domain Baru' }) %>
+<%- include('../partials/header', { title: 'Beli Domain Baru', currentPath: '/dashboard/buy-domain' }) %>
+
 <style>
-    .domain-search-container { max-width: 800px; margin: 0 auto; }
-    #domain-search-form { display: flex; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border-radius: 50px; }
+    #domain-search-form { display: flex; box-shadow: var(--shadow-light); border-radius: 50px; }
     #domain-input { flex-grow: 1; padding: 18px 25px; border: 2px solid transparent; font-size: 1rem; border-radius: 50px 0 0 50px; outline: none; }
-    #domain-search-button { padding: 18px 35px; border-radius: 0 50px 50px 0; background: #8e44ad; color: white; border: none; cursor: pointer; font-size: 1rem; font-weight: 600; }
-    #domain-results { margin-top: 35px; }
-    .spinner { border: 4px solid rgba(0,0,0,0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #8e44ad; animation: spin 1s ease infinite; margin: 10px auto; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .domain-suggestion-list { list-style: none; padding: 0; }
-    .suggestion-item { background: white; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); margin-bottom: 12px; }
-    .suggestion-item-name { font-weight: 600; font-size: 1.1rem; }
-    .status-available { color: #2ecc71; font-weight: 600; margin-right: 15px; }
-    .status-taken { color: #8d8d8d; }
-    .btn-small { padding: 8px 20px !important; }
+    #domain-search-button { padding: 18px 35px; border-radius: 0 50px 50px 0; background: var(--secondary-accent); color: white; border: none; cursor: pointer; font-size: 1rem; font-weight: 600; }
 </style>
-<div class="card domain-search-container">
+
+<div class="card" style="max-width: 800px; margin: 0 auto;">
     <h2><i class="fas fa-search"></i> Cari Domain Baru</h2>
     <p>Wujudkan ide Anda dengan nama domain yang sempurna.</p>
-    <form id="domain-search-form" action="#" method="get">
+    <form id="domain-search-form">
         <input type="text" id="domain-input" placeholder="contohdomain.id atau usahadigital" required>
         <button type="submit" id="domain-search-button">Cari</button>
     </form>
-    <div id="domain-results"></div>
+    <div id="domain-results" style="margin-top: 2rem;"></div>
 </div>
+
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const domainForm = document.getElementById('domain-search-form');
@@ -32,33 +25,34 @@
             e.preventDefault();
             const keyword = domainInput.value.trim();
             if (!keyword) {
-                domainResults.innerHTML = `<p class="status-taken" style="text-align: center;">Harap masukkan nama domain.</p>`;
+                domainResults.innerHTML = `<p style="text-align: center;">Harap masukkan nama domain.</p>`;
                 return;
             }
-            domainResults.innerHTML = '<div class="spinner"></div>';
+            domainResults.innerHTML = '<div style="text-align:center;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
             try {
                 const response = await fetch('/check-domain', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keyword: keyword }) });
                 if (!response.ok) throw new Error('Network error');
                 const results = await response.json();
-                let resultsHTML = '<ul class="domain-suggestion-list">';
+                let resultsHTML = '<ul>';
                 results.forEach(result => {
                     let statusHTML = '';
                     if (result.error) {
-                        statusHTML = `<span class="status-taken">Gagal memeriksa</span>`;
+                        statusHTML = `<span>Gagal memeriksa</span>`;
                     } else if (result.isAvailable) {
                         const orderUrl = `/dashboard/confirm-registration?domain=${result.domain}`;
-                        statusHTML = `<div><span class="status-available">TERSEDIA</span> <a href="${orderUrl}" class="btn btn-primary btn-small">Pesan</a></div>`;
+                        statusHTML = `<div><span>TERSEDIA</span> <a href="${orderUrl}" class="btn btn-primary">Pesan</a></div>`;
                     } else {
-                        statusHTML = `<span class="status-taken">Sudah Diambil</span>`;
+                        statusHTML = `<span>Sudah Diambil</span>`;
                     }
-                    resultsHTML += `<li class="suggestion-item"><span class="suggestion-item-name">${result.domain}</span> ${statusHTML}</li>`;
+                    resultsHTML += `<li><span>${result.domain}</span> ${statusHTML}</li>`;
                 });
                 resultsHTML += '</ul>';
                 domainResults.innerHTML = resultsHTML;
             } catch (error) {
-                domainResults.innerHTML = `<p class="status-taken" style="text-align: center;">Terjadi kesalahan pada koneksi.</p>`;
+                domainResults.innerHTML = `<p style="text-align: center;">Terjadi kesalahan pada koneksi.</p>`;
             }
         });
     });
 </script>
+
 <%- include('../partials/footer') %>

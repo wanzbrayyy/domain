@@ -4,29 +4,19 @@
     .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
     .detail-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
     .detail-item:last-child { border-bottom: none; }
-    .detail-item span:first-child { font-weight: 500; color: #555; }
-    .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; color: white; font-weight: 500; }
-    .status-active { background-color: #10b981; }
-    .status-locked { background-color: #f59e0b; }
-    .status-inactive { background-color: #6b7280; }
-    .btn { display: inline-block; padding: 0.7rem 1.5rem; border: none; border-radius: 50px; font-weight: 600; text-decoration: none; cursor: pointer; transition: all 0.3s; }
-    .btn-primary { background: linear-gradient(45deg, #82aaff, #577ed4); color: white; }
-    .btn-warning { background-color: #f59e0b; color: white; }
-    .btn-danger { background-color: #ef4444; color: white; }
 </style>
 
 <h1>Kelola Domain: <span style="color: var(--primary-accent);"><%= domain.name %></span></h1>
 
 <div class="grid-2" style="margin-top: 2rem;">
     <div class="card">
-        <h3><i class="fas fa-info-circle" style="margin-right: 8px;"></i> Detail Domain</h3>
+        <h3><i class="fas fa-info-circle"></i> Detail Domain</h3>
         <div class="detail-item"><span>Status</span> <span><%= domain.status_desc %></span></div>
-        <div class="detail-item"><span>Dibuat pada</span> <span><%= new Date(domain.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) %></span></div>
-        <div class="detail-item"><span>Kedaluwarsa pada</span> <span><%= new Date(domain.expiry_date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) %></span></div>
+        <div class="detail-item"><span>Dibuat pada</span> <span><%= new Date(domain.created_at).toLocaleDateString('id-ID') %></span></div>
+        <div class="detail-item"><span>Kedaluwarsa</span> <span><%= new Date(domain.expiry_date).toLocaleDateString('id-ID') %></span></div>
     </div>
-
     <div class="card">
-        <h3><i class="fas fa-server" style="margin-right: 8px;"></i> Nameserver</h3>
+        <h3><i class="fas fa-server"></i> Nameserver</h3>
         <% if (domain.nameservers && domain.nameservers.length > 0) { %>
             <% domain.nameservers.forEach(ns => { %>
                 <div class="detail-item"><span><%= ns.host %></span></div>
@@ -34,39 +24,24 @@
         <% } else { %>
             <p>Nameserver belum diatur.</p>
         <% } %>
-        <!-- Form untuk update NS bisa ditambahkan di sini jika diperlukan -->
     </div>
-
     <div class="card">
-        <h3><i class="fas fa-dns" style="margin-right: 8px;"></i> DNS Manager</h3>
-        <p>Kelola A, CNAME, MX, dan record lainnya untuk domain Anda secara gratis.</p>
-        <a href="/dashboard/domain/<%= domain.id %>/dns" class="btn btn-primary" style="margin-top: 1rem;">Buka DNS Manager</a>
+        <h3><i class="fas fa-dns"></i> DNS Manager</h3>
+        <p>Kelola record DNS untuk domain Anda.</p>
+        <a href="/dashboard/domain/<%= domain.id %>/dns" class="btn btn-primary">Buka DNS Manager</a>
     </div>
-
     <div class="card">
-        <h3><i class="fas fa-lock" style="margin-right: 8px;"></i> Registrar Lock</h3>
+        <h3><i class="fas fa-lock"></i> Registrar Lock</h3>
         <div class="detail-item">
             <span>Status Lock</span>
-            <% if (domain.is_locked) { %>
-                <span class="status-badge status-locked">AKTIF</span>
-            <% } else { %>
-                <span class="status-badge status-inactive">NONAKTIF</span>
-            <% } %>
+            <span><%= domain.is_locked ? 'AKTIF' : 'NONAKTIF' %></span>
         </div>
-        <form action="/dashboard/domain/<%= domain.id %>/toggle-lock" method="POST" style="margin-top: 1rem;" onsubmit="return confirm('Apakah Anda yakin ingin mengubah status lock domain ini?');">
+        <form action="/dashboard/domain/<%= domain.id %>/toggle-lock" method="POST" onsubmit="return confirm('Yakin ingin mengubah status lock?');">
             <% if (domain.is_locked) { %>
-                <button type="submit" class="btn btn-warning">Buka Kunci (Unlock)</button>
+                <button type="submit" class="btn btn-danger">Buka Kunci (Unlock)</button>
             <% } else { %>
                 <button type="submit" class="btn btn-primary">Kunci (Lock)</button>
             <% } %>
-        </form>
-    </div>
-    
-    <div class="card">
-        <h3><i class="fas fa-cogs" style="margin-right: 8px;"></i> Tindakan Lain</h3>
-        <form action="/dashboard/domain/<%= domain.id %>/resend-verification" method="POST" style="margin-top: 1rem;">
-             <p>Jika Anda belum menerima email verifikasi kontak, Anda bisa mengirimnya ulang.</p>
-            <button type="submit" class="btn btn-primary">Kirim Ulang Email Verifikasi</button>
         </form>
     </div>
 </div>
